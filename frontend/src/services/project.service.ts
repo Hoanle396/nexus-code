@@ -10,6 +10,12 @@ export interface Project {
   autoReview: boolean;
   isActive: boolean;
   discordChannelId?: string;
+  teamId: string;
+  team?: {
+    id: string;
+    name: string;
+    plan: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -18,6 +24,7 @@ export interface CreateProjectData {
   name: string;
   type: 'github' | 'gitlab';
   repositoryUrl: string;
+  teamId: string;
   businessContext?: string;
   reviewRules?: Record<string, any>;
   autoReview?: boolean;
@@ -34,8 +41,9 @@ export interface UpdateProjectData {
 }
 
 export const projectService = {
-  getAll: async (): Promise<Project[]> => {
-    const response = await api.get('/projects');
+  getAll: async (teamId?: string): Promise<Project[]> => {
+    const params = teamId ? { teamId } : {};
+    const response = await api.get('/projects', { params });
     return response.data;
   },
 

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../user/user.entity';
 import { Review } from '../review/review.entity';
+import { Team } from '../team/team.entity';
 
 export enum ProjectType {
   GITHUB = 'github',
@@ -57,6 +58,13 @@ export class Project {
 
   @Column()
   userId: string;
+
+  @ManyToOne(() => Team, (team) => team.projects, { nullable: true })
+  @JoinColumn({ name: 'teamId' })
+  team: Team;
+
+  @Column({ nullable: true })
+  teamId?: string;
 
   @OneToMany(() => Review, (review) => review.project)
   reviews: Review[];

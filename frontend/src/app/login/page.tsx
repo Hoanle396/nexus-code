@@ -29,10 +29,10 @@ export default function LoginPage() {
     try {
       const response = await authService.login(data);
       setAuth(response.user, response.access_token);
-      toast.success('Đăng nhập thành công!');
+      toast.success('Login successful!');
       router.push('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Đăng nhập thất bại');
+      toast.error(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -42,9 +42,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Nhập thông tin để truy cập vào hệ thống
+            Enter your credentials to access the system
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -55,7 +55,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="your@email.com"
-                {...register('email', { required: 'Email là bắt buộc' })}
+                {...register('email', { required: 'Email is required' })}
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -63,12 +63,12 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                {...register('password', { required: 'Mật khẩu là bắt buộc' })}
+                {...register('password', { required: 'Password is required' })}
               />
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>
@@ -76,14 +76,14 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
 
           <div className="mt-4 text-center text-sm">
-            Chưa có tài khoản?{' '}
+            Don't have an account?{' '}
             <Link href="/register" className="text-primary hover:underline">
-              Đăng ký ngay
+              Sign up now
             </Link>
           </div>
         </CardContent>

@@ -6,12 +6,14 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../user/user.entity';
+import { Team } from '../team/team.entity';
+import { TeamMember } from '../team/team-member.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Team, TeamMember]),
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],

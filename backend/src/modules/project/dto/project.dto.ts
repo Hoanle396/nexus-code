@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsOptional, IsBoolean, IsUUID } from 'class-validator';
 import { ProjectType } from '../project.entity';
 
 export class CreateProjectDto {
@@ -10,6 +10,10 @@ export class CreateProjectDto {
 
   @IsNotEmpty()
   repositoryUrl: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  teamId: string;
 
   @IsOptional()
   businessContext?: string;

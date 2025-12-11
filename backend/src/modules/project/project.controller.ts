@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -37,8 +38,8 @@ export class ProjectController {
   @Get()
   @ApiOperation({ summary: 'Get all user projects' })
   @ApiResponse({ status: 200, description: 'Returns list of projects' })
-  findAll(@Request() req) {
-    return this.projectService.findAll(req.user.id);
+  findAll(@Request() req, @Query('teamId') teamId?: string) {
+    return this.projectService.findAll(req.user.id, teamId);
   }
 
   @Get(':id')

@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { hash, verify } from '@node-rs/argon2';
 import { User } from '../user/user.entity';
+import { Team } from '../team/team.entity';
+import { TeamMember, TeamRole, InvitationStatus } from '../team/team-member.entity';
 import { RegisterDto, LoginDto, UpdateTokensDto } from './dto/auth.dto';
 
 @Injectable()
@@ -15,6 +17,10 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Team)
+    private teamRepository: Repository<Team>,
+    @InjectRepository(TeamMember)
+    private teamMemberRepository: Repository<TeamMember>,
     private jwtService: JwtService,
   ) {}
 
@@ -34,10 +40,27 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
 
-    const { password, ...result } = user;
-    return result;
+    // Auto-create personal team for new user
+    const personalTeam = this.teamRepository.create({
+      name: `${registerDto.fullName || registerDto.email.split('@')[0]}'s Team`,
+      description: 'Personal workspace',
+      ownerId: savedUser.id,
+    });
+
+    const savedTeam = await this.teamRepository.save(personalTeam);
+
+    // Add user as team owner
+    await this.teamMemberRepository.save({
+      teamId: savedTeam.id,
+      userId: savedUser.id,
+      role: TeamRole.OWNER,
+      status: InvitationStatus.ACCEPTED,
+    });
+
+    const { password, ...result } = savedUser;
+    return { ...result, defaultTeamId: savedTeam.id };
   }
 
   async validateUser(email: string, password: string): Promise<any> {

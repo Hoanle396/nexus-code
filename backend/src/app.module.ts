@@ -10,6 +10,8 @@ import { WebhookModule } from './modules/webhook/webhook.module';
 import { AiModule } from './modules/ai/ai.module';
 import { TrainingModule } from './modules/training/training.module';
 import { DiscordModule } from './modules/discord/discord.module';
+import { TeamModule } from './modules/team/team.module';
+import { SubscriptionModule } from './modules/subscription/subscription.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { DiscordModule } from './modules/discord/discord.module';
     AiModule,
     TrainingModule,
     DiscordModule,
+    TeamModule,
+    SubscriptionModule,
   ],
 })
 export class AppModule {}

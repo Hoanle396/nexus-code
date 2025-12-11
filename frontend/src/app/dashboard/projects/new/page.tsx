@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -12,11 +12,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { projectService, CreateProjectData } from '@/services/project.service';
 import { ArrowLeft } from 'lucide-react';
 
+interface Team {
+  id: string;
+  name: string;
+  plan: string;
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(true);
   
   const { register, handleSubmit, formState: { errors } } = useForm<CreateProjectData>();
+
+  useEffect(() => {
+    loadTeams();
+  }, []);
+
+  const loadTeams = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/teams`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setTeams(data);
+    } catch (error) {
+      toast.error('Không thể tải danh sách teams');
+    } finally {
+      setLoadingTeams(false);
+    }
+  };
 
   const onSubmit = async (data: CreateProjectData) => {
     setLoading(true);
@@ -60,6 +87,26 @@ export default function NewProjectPage() {
               />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="teamId">Team *</Label>
+              <select
+                id="teamId"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                {...register('teamId', { required: 'Team là bắt buộc' })}
+                disabled={loadingTeams}
+              >
+                <option value="">Chọn team</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name} ({team.plan})
+                  </option>
+                ))}
+              </select>
+              {errors.teamId && (
+                <p className="text-sm text-red-500">{errors.teamId.message}</p>
               )}
             </div>
 
