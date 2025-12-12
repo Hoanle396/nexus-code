@@ -1,27 +1,36 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-hot-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  CreditCard, 
-  TrendingUp, 
-  Calendar, 
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-hot-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  CreditCard,
+  TrendingUp,
+  Calendar,
   AlertCircle,
   CheckCircle,
   Clock,
   DollarSign,
-  ArrowUpCircle,
   Wallet,
-  ExternalLink
-} from 'lucide-react';
-import { ethers, BrowserProvider } from 'ethers';
+  ExternalLink,
+  ArrowUpRight,
+  Zap,
+} from "lucide-react";
+import { ethers, BrowserProvider } from "ethers";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
-// Extend Window interface for Web3
 declare global {
   interface Window {
     ethereum?: any;
@@ -30,9 +39,9 @@ declare global {
 
 interface Subscription {
   id: string;
-  plan: 'free' | 'starter' | 'professional' | 'enterprise';
-  status: 'active' | 'canceled' | 'expired' | 'past_due' | 'trialing';
-  billingCycle: 'monthly' | 'yearly';
+  plan: "free" | "starter" | "professional" | "enterprise";
+  status: "active" | "canceled" | "expired" | "past_due" | "trialing";
+  billingCycle: "monthly" | "yearly";
   currentPeriodStart: string;
   currentPeriodEnd: string;
   currentMonthReviews: number;
@@ -45,7 +54,7 @@ interface Payment {
   id: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'succeeded' | 'failed' | 'refunded';
+  status: "pending" | "succeeded" | "failed" | "refunded";
   transactionHash?: string;
   chainId?: number;
   blockNumber?: number;
@@ -74,11 +83,10 @@ const PLAN_PRICES = {
   enterprise: 299,
 };
 
-// USDC Token ABI (minimal)
 const USDC_ABI = [
-  'function transfer(address to, uint256 amount) returns (bool)',
-  'function balanceOf(address account) view returns (uint256)',
-  'function decimals() view returns (uint8)',
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function decimals() view returns (uint8)",
 ];
 
 export default function BillingPage() {
@@ -89,9 +97,9 @@ export default function BillingPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Web3 states
-  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [walletAddress, setWalletAddress] = useState<string>("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [supportedChains, setSupportedChains] = useState<SupportedChain[]>([]);
   const [pendingPayment, setPendingPayment] = useState<any>(null);
@@ -100,17 +108,17 @@ export default function BillingPage() {
   useEffect(() => {
     fetchBillingData();
     checkWalletConnection();
-    
-    // Check if user came from pricing page with a plan selection
-    const planParam = searchParams.get('plan');
-    if (planParam && planParam.toLowerCase() !== 'free') {
-      // Show info about selected plan
-      toast.success(`Selected ${planParam} plan. Connect wallet to proceed with payment.`);
+
+    const planParam = searchParams.get("plan");
+    if (planParam && planParam.toLowerCase() !== "free") {
+      toast.success(
+        `Ready to upgrade to ${planParam.toUpperCase()} plan! Connect your wallet to pay with USDC.`
+      );
     }
   }, [searchParams]);
 
   const checkWalletConnection = async () => {
-    if (typeof window.ethereum !== 'undefined') {
+    if (typeof window.ethereum !== "undefined") {
       try {
         const provider = new BrowserProvider(window.ethereum);
         const accounts = await provider.listAccounts();
@@ -118,79 +126,73 @@ export default function BillingPage() {
           setWalletAddress(accounts[0].address);
         }
       } catch (error) {
-        console.error('Failed to check wallet connection:', error);
+        console.error("Wallet check failed:", error);
       }
     }
   };
 
   const connectWallet = async () => {
-    if (typeof window.ethereum === 'undefined') {
-      toast.error('Please install MetaMask or another Web3 wallet');
+    if (typeof window.ethereum === "undefined") {
+      toast.error("MetaMask or another Web3 wallet is required");
       return;
     }
 
     setIsConnecting(true);
     try {
       const provider = new BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
+      const accounts = await provider.send("eth_requestAccounts", []);
       setWalletAddress(accounts[0]);
-      toast.success('Wallet connected successfully!');
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      toast.error('Failed to connect wallet');
+      toast.success("Wallet connected successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to connect wallet");
     } finally {
       setIsConnecting(false);
     }
   };
 
   const disconnectWallet = () => {
-    setWalletAddress('');
-    toast.success('Wallet disconnected');
+    setWalletAddress("");
+    toast.success("Wallet disconnected");
   };
 
   const fetchBillingData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const subRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/me`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const token = localStorage.getItem("token");
+      const subRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (subRes.ok) {
         const subData = await subRes.json();
-        
-        // Only set subscription if data exists
         if (subData && subData.id) {
           setSubscription(subData);
-          
-          // Fetch usage and payments
+
           const [usageRes, paymentsRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subData.id}/usage`, {
-              headers: { 'Authorization': `Bearer ${token}` },
-            }),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subData.id}/payments`, {
-              headers: { 'Authorization': `Bearer ${token}` },
-            }),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subData.id}/usage`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
+            fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subData.id}/payments`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            ),
           ]);
 
-          if (usageRes.ok) {
-            const usageData = await usageRes.json();
-            setUsage(usageData);
-          }
-
-          if (paymentsRes.ok) {
-            const paymentsData = await paymentsRes.json();
-            setPayments(paymentsData);
-          }
+          if (usageRes.ok) setUsage(await usageRes.json());
+          if (paymentsRes.ok) setPayments(await paymentsRes.json());
         }
       } else if (subRes.status === 404) {
-        // No subscription yet - this is normal for new users
         setSubscription(null);
-      } else {
-        throw new Error('Failed to fetch subscription');
       }
     } catch (error) {
-      console.error('Billing data error:', error);
-      toast.error('Unable to load billing information');
+      toast.error("Unable to load billing information");
     } finally {
       setLoading(false);
     }
@@ -198,286 +200,266 @@ export default function BillingPage() {
 
   const createPaymentIntent = async (plan: string) => {
     if (!walletAddress) {
-      toast.error('Please connect your wallet first');
+      toast.error("Please connect your wallet first");
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      
-      // Update or create subscription
+      const token = localStorage.getItem("token");
       let subId = subscription?.id;
       let currentSub = subscription;
-      
+
       if (subId) {
-        // Update existing subscription
-        const updateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ 
-            plan: plan.toLowerCase(),
-            billingCycle: 'monthly'
-          }),
-        });
-
-        if (!updateRes.ok) throw new Error('Failed to update subscription');
-        currentSub = await updateRes.json();
-        setSubscription(currentSub);
+        const updateRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              plan: plan.toLowerCase(),
+              billingCycle: "monthly",
+            }),
+          }
+        );
+        if (updateRes.ok) currentSub = await updateRes.json();
       } else {
-        // Create new subscription
-        const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ 
-            plan: plan.toLowerCase(),
-            billingCycle: 'monthly'
-          }),
-        });
-
-        if (!createRes.ok) throw new Error('Failed to create subscription');
-        currentSub = await createRes.json();
-        subId = currentSub?.id || '';
-        setSubscription(currentSub);
+        const createRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/subscriptions`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              plan: plan.toLowerCase(),
+              billingCycle: "monthly",
+            }),
+          }
+        );
+        if (createRes.ok) {
+          currentSub = await createRes.json();
+          if (currentSub?.id) {
+            subId = currentSub?.id;
+          }
+        }
       }
 
-      // Create payment intent
+      setSubscription(currentSub);
+
       const amount = PLAN_PRICES[plan as keyof typeof PLAN_PRICES];
       const paymentRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subId}/payment`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            amount,
-            walletAddress,
-            metadata: { plan },
-          }),
+          body: JSON.stringify({ amount, walletAddress, metadata: { plan } }),
         }
       );
 
-      if (!paymentRes.ok) throw new Error('Failed to create payment');
-      
+      if (!paymentRes.ok) throw new Error();
       const paymentData = await paymentRes.json();
       setPendingPayment(paymentData);
       setSupportedChains(paymentData.supportedChains);
-      
-      toast.success('Payment created! Please send USDC to complete.');
-      return paymentData;
+      toast.success(
+        `Payment ready! Send ${amount} USDC to activate your plan.`
+      );
     } catch (error) {
-      console.error('Payment creation failed:', error);
-      toast.error('Failed to create payment');
+      toast.error("Failed to prepare payment");
     }
   };
 
   const sendUSDCPayment = async (chainId: number) => {
     if (!pendingPayment || !walletAddress) return;
-
     setProcessingPayment(true);
+
     try {
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      
-      // Switch to correct chain
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: `0x${chainId.toString(16)}` }],
-        });
-      } catch (error: any) {
-        if (error.code === 4902) {
-          toast.error('Please add this network to your wallet');
-          setProcessingPayment(false);
-          return;
-        }
-      }
 
-      // Find chain details
-      const chain = supportedChains.find(c => c.chainId === chainId);
-      if (!chain) throw new Error('Chain not supported');
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: `0x${chainId.toString(16)}` }],
+      });
 
-      // Create USDC contract instance
+      const chain = supportedChains.find((c) => c.chainId === chainId);
+      if (!chain) throw new Error("Unsupported chain");
+
       const usdcContract = new ethers.Contract(
         chain.usdcAddress,
         USDC_ABI,
         signer
       );
+      const amount = ethers.parseUnits(pendingPayment.amount.toString(), 6);
+      const tx = await usdcContract.transfer(
+        pendingPayment.receiverAddress,
+        amount
+      );
 
-      // Send USDC
-      const amount = ethers.parseUnits(pendingPayment.amount.toString(), 6); // USDC has 6 decimals
-      const tx = await usdcContract.transfer(pendingPayment.receiverAddress, amount);
-      
-      toast.success('Transaction sent! Waiting for confirmation...');
-      
-      // Wait for confirmation
+      toast.success("Transaction sent! Confirming...");
       const receipt = await tx.wait();
-      
-      toast.success('Transaction confirmed! Verifying...');
+      toast.success("Transaction confirmed! Verifying payment...");
 
-      // Verify payment on backend
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const verifyRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/payment/${pendingPayment.payment.id}/verify`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            transactionHash: receipt.hash,
-            chainId,
-          }),
+          body: JSON.stringify({ transactionHash: receipt.hash, chainId }),
         }
       );
 
-      if (!verifyRes.ok) throw new Error('Payment verification failed');
-
-      toast.success('Payment verified! Subscription activated!');
+      if (!verifyRes.ok) throw new Error();
+      toast.success("Payment successful! Subscription activated 🎉");
       setPendingPayment(null);
       fetchBillingData();
-      
     } catch (error: any) {
-      console.error('Payment failed:', error);
-      toast.error(error.message || 'Payment failed');
+      toast.error(error.message || "Payment failed");
     } finally {
       setProcessingPayment(false);
     }
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription?')) return;
+    if (
+      !confirm(
+        "Cancel your subscription? You will keep access until the end of the current period."
+      )
+    )
+      return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
+      const token = localStorage.getItem("token");
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subscription?.id}`,
         {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` },
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      if (!response.ok) throw new Error();
-
-      toast.success('Subscription cancelled successfully');
-      fetchBillingData();
+      if (res.ok) {
+        toast.success("Subscription cancelled");
+        fetchBillingData();
+      }
     } catch (error) {
-      toast.error('Failed to cancel subscription');
+      toast.error("Failed to cancel subscription");
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      active: 'default',
-      canceled: 'secondary',
-      expired: 'destructive',
-      past_due: 'destructive',
-      trialing: 'secondary',
-    };
-    return <Badge variant={variants[status]}>{status.toUpperCase()}</Badge>;
-  };
+  const formatAddress = (addr: string) =>
+    addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
-  const getPaymentStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      pending: 'secondary',
-      succeeded: 'default',
-      failed: 'destructive',
-      refunded: 'secondary',
-    };
-    return <Badge variant={variants[status]}>{status.toUpperCase()}</Badge>;
-  };
-
-  const calculateProgress = (used: number, limit: number) => {
-    if (limit === -1) return 0;
-    return Math.min((used / limit) * 100, 100);
-  };
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const getBlockExplorerUrl = (chainId: number, txHash: string) => {
+  const getBlockExplorerUrl = (chainId: number, hash: string) => {
     const explorers: Record<number, string> = {
-      1: 'https://etherscan.io',
-      11155111: 'https://sepolia.etherscan.io',
-      137: 'https://polygonscan.com',
-      80001: 'https://mumbai.polygonscan.com',
-      42161: 'https://arbiscan.io',
-      421614: 'https://sepolia.arbiscan.io',
-      8453: 'https://basescan.org',
-      84532: 'https://sepolia.basescan.org',
+      1: "https://etherscan.io/tx",
+      11155111: "https://sepolia.etherscan.io/tx",
+      137: "https://polygonscan.com/tx",
+      80001: "https://mumbai.polygonscan.com/tx",
+      42161: "https://arbiscan.io/tx",
+      8453: "https://basescan.org/tx",
     };
-    return `${explorers[chainId]}/tx/${txHash}`;
+    return `${explorers[chainId] || "https://etherscan.io/tx"}/${hash}`;
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex flex-col items-center justify-center py-32">
+        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+        <p className="mt-6 text-zinc-500 text-lg">
+          Loading billing information...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-          <p className="text-muted-foreground">Manage your subscription with USDC payments</p>
+    <div className="max-w-6xl mx-auto py-8 space-y-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="flex items-center gap-5">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center shadow-xl">
+            <DollarSign className="h-8 w-8 text-zinc-300" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+              Billing & Subscription
+            </h1>
+            <p className="text-zinc-400 mt-2 text-lg">
+              Manage your plan and pay securely with USDC
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex flex-wrap gap-3">
           {walletAddress ? (
-            <Button variant="outline" onClick={disconnectWallet}>
+            <Button
+              variant="outline"
+              onClick={disconnectWallet}
+              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            >
               <Wallet className="h-4 w-4 mr-2" />
               {formatAddress(walletAddress)}
             </Button>
           ) : (
-            <Button onClick={connectWallet} disabled={isConnecting}>
-              <Wallet className="h-4 w-4 mr-2" />
-              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+            <Button
+              onClick={connectWallet}
+              disabled={isConnecting}
+              className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg"
+            >
+              <Wallet className="h-5 w-5 mr-2" />
+              {isConnecting ? "Connecting..." : "Connect Wallet"}
             </Button>
           )}
-          <Button onClick={() => router.push('/pricing')}>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/pricing")}
+            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          >
             <TrendingUp className="h-4 w-4 mr-2" />
-            View Pricing
+            View Plans
           </Button>
         </div>
       </div>
 
-      {/* Pending Payment */}
+      {/* Pending Payment Alert */}
       {pendingPayment && (
-        <Card className="border-blue-500 bg-blue-50">
+        <Card className="border-2 border-blue-500/50 bg-blue-900/20 backdrop-blur-sm shadow-2xl">
           <CardHeader>
-            <CardTitle>Complete Payment</CardTitle>
-            <CardDescription>
-              Send {pendingPayment.amount} USDC to complete your subscription
+            <CardTitle className="flex items-center gap-3 text-blue-400">
+              <Zap className="h-6 w-6" />
+              Complete Your Payment
+            </CardTitle>
+            <CardDescription className="text-zinc-300">
+              Send {pendingPayment.amount} USDC to activate your subscription
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div>
-              <div className="text-sm text-muted-foreground mb-1">Receiver Address</div>
-              <code className="block p-2 bg-white rounded border text-sm">
+              <Label className="text-zinc-400">Receiver Address</Label>
+              <code className="block mt-2 p-3 bg-zinc-800/70 rounded-lg border border-zinc-700 text-sm font-mono text-white break-all">
                 {pendingPayment.receiverAddress}
               </code>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground mb-2">Select Network</div>
-              <div className="grid grid-cols-2 gap-2">
+              <Label className="text-zinc-400">Choose Network</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
                 {supportedChains.map((chain) => (
                   <Button
                     key={chain.chainId}
-                    variant="outline"
                     onClick={() => sendUSDCPayment(chain.chainId)}
                     disabled={processingPayment}
+                    variant="outline"
+                    className="border-zinc-600 hover:bg-zinc-800 hover:text-white"
                   >
                     {chain.name}
                   </Button>
@@ -489,228 +471,255 @@ export default function BillingPage() {
       )}
 
       {/* Current Subscription */}
-      <Card>
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
         <CardHeader>
           <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Current Subscription
-              </CardTitle>
-              <CardDescription>Your current plan and status</CardDescription>
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-6 w-6 text-zinc-400" />
+              <div>
+                <CardTitle className="text-2xl text-white">
+                  Current Plan
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Your subscription details
+                </CardDescription>
+              </div>
             </div>
-            {subscription && getStatusBadge(subscription.status)}
+            {subscription && (
+              <Badge
+                variant={
+                  subscription.status === "active" ? "default" : "secondary"
+                }
+                className="text-lg px-4 py-1 capitalize"
+              >
+                {subscription.status}
+              </Badge>
+            )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {subscription ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <div className="text-sm text-muted-foreground">Plan</div>
-                  <div className="text-2xl font-bold">{subscription.plan}</div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-1">
+                  <p className="text-zinc-500 text-sm">Plan</p>
+                  <p className="text-3xl font-bold text-white capitalize">
+                    {subscription.plan}
+                  </p>
                 </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">Price</div>
-                  <div className="text-2xl font-bold">${subscription.price} USDC/month</div>
+                <div className="space-y-1">
+                  <p className="text-zinc-500 text-sm">Monthly Price</p>
+                  <p className="text-3xl font-bold text-white">
+                    ${subscription.price} USDC
+                  </p>
                 </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">Billing Cycle</div>
-                  <div className="text-lg font-medium">{subscription.billingCycle}</div>
+                <div className="space-y-1">
+                  <p className="text-zinc-500 text-sm">Billing Period</p>
+                  <p className="text-2xl font-semibold text-white capitalize">
+                    {subscription.billingCycle}
+                  </p>
                 </div>
               </div>
 
               {subscription.walletAddress && (
-                <div className="text-sm text-muted-foreground">
-                  <Wallet className="h-4 w-4 inline mr-1" />
-                  Payment Wallet: {formatAddress(subscription.walletAddress)}
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <Wallet className="h-5 w-5" />
+                  <span>
+                    Paid from: {formatAddress(subscription.walletAddress)}
+                  </span>
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                Period: {new Date(subscription.currentPeriodStart).toLocaleDateString()} - {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+              <div className="flex items-center gap-2 text-zinc-400">
+                <Calendar className="h-5 w-5" />
+                <span>
+                  {new Date(
+                    subscription.currentPeriodStart
+                  ).toLocaleDateString()}{" "}
+                  →{" "}
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                </span>
               </div>
 
-              <div className="flex gap-2 pt-4 flex-wrap">
-                {subscription.plan === 'free' && (
-                  <>
-                    <Button onClick={async () => {
-                      const token = localStorage.getItem('token');
-                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subscription.id}`, {
-                        method: 'PATCH',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ plan: 'starter' }),
-                      });
-                      if (res.ok) {
-                        toast.success('Upgraded to Starter!');
-                        fetchBillingData();
-                      }
-                    }} variant="outline">
-                      Quick Upgrade to Starter (Demo)
-                    </Button>
-                    <Button onClick={async () => {
-                      const token = localStorage.getItem('token');
-                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subscription.id}`, {
-                        method: 'PATCH',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ plan: 'professional' }),
-                      });
-                      if (res.ok) {
-                        toast.success('Upgraded to Professional!');
-                        fetchBillingData();
-                      }
-                    }}>
-                      Quick Upgrade to Pro (Demo)
-                    </Button>
-                  </>
-                )}
-                {subscription.plan === 'starter' && (
-                  <Button onClick={async () => {
-                    const token = localStorage.getItem('token');
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subscription.id}`, {
-                      method: 'PATCH',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({ plan: 'PROFESSIONAL' }),
-                    });
-                    if (res.ok) {
-                      toast.success('Upgraded to Professional!');
-                      fetchBillingData();
+              <div className="flex flex-wrap gap-3 pt-4">
+                {walletAddress && subscription.plan !== "enterprise" && (
+                  <Button
+                    onClick={() =>
+                      createPaymentIntent(
+                        subscription.plan === "free"
+                          ? "starter"
+                          : "professional"
+                      )
                     }
-                  }}>
-                    Quick Upgrade to Pro (Demo)
+                    className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg font-medium"
+                  >
+                    <ArrowUpRight className="h-5 w-5 mr-2" />
+                    Upgrade / Renew with USDC
                   </Button>
                 )}
-                {walletAddress && subscription.plan !== 'enterprise' && (
-                  <Button onClick={() => createPaymentIntent(subscription.plan === 'free' ? 'starter' : 'professional')} variant="secondary">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Pay with USDC
-                  </Button>
-                )}
-                {!walletAddress && subscription.plan !== 'enterprise' && (
-                  <Button onClick={connectWallet} variant="secondary">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Connect Wallet
-                  </Button>
-                )}
-                {subscription.status === 'active' && subscription.plan !== 'free' && (
-                  <Button variant="destructive" onClick={handleCancelSubscription}>
-                    Cancel Subscription
-                  </Button>
-                )}
+                {subscription.status === "active" &&
+                  subscription.plan !== "free" && (
+                    <Button
+                      variant="destructive"
+                      onClick={handleCancelSubscription}
+                    >
+                      Cancel Subscription
+                    </Button>
+                  )}
               </div>
-            </div>
+            </>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No active subscription</p>
-              <Button onClick={() => router.push('/pricing')}>
-                View Plans
+            <div className="text-center py-12 space-y-6">
+              <div className="w-20 h-20 mx-auto rounded-full bg-zinc-800 flex items-center justify-center">
+                <CreditCard className="h-10 w-10 text-zinc-600" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">
+                No Active Subscription
+              </h3>
+              <p className="text-zinc-400 max-w-md mx-auto">
+                You're currently on the Free plan. Upgrade to unlock more AI
+                reviews and features.
+              </p>
+              <Button
+                onClick={() => router.push("/pricing")}
+                className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg text-lg px-8 py-6"
+              >
+                <Zap className="h-6 w-6 mr-3" />
+                Explore Paid Plans
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Usage Stats */}
+      {/* Usage Statistics */}
       {usage && subscription && (
-        <Card>
+        <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Usage Statistics
+            <CardTitle className="flex items-center gap-3">
+              <TrendingUp className="h-6 w-6 text-zinc-400" />
+              Monthly Usage
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium">Code Reviews</span>
-                <span className="text-sm text-muted-foreground">
-                  {usage.currentMonthReviews} / {usage.monthlyReviewLimit === -1 ? '∞' : usage.monthlyReviewLimit}
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-zinc-300 font-medium">
+                  AI Code Reviews This Month
+                </span>
+                <span className="text-xl font-bold text-white">
+                  {usage.currentMonthReviews} /{" "}
+                  {usage.monthlyReviewLimit === -1
+                    ? "Unlimited"
+                    : usage.monthlyReviewLimit}
                 </span>
               </div>
-              <Progress value={usage.usagePercentage} />
-              {usage.monthlyReviewLimit !== -1 && usage.usagePercentage >= 80 && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-orange-600">
-                  <AlertCircle className="h-4 w-4" />
-                  Approaching limit! Consider upgrading.
-                </div>
-              )}
+              <Progress value={usage.usagePercentage} className="h-4" />
+              {usage.usagePercentage >= 80 &&
+                usage.monthlyReviewLimit !== -1 && (
+                  <div className="flex items-center gap-2 mt-4 text-orange-400">
+                    <AlertCircle className="h-5 w-5" />
+                    <span>
+                      You’re using {usage.usagePercentage.toFixed(0)}% of your
+                      monthly limit. Consider upgrading!
+                    </span>
+                  </div>
+                )}
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Payment History */}
-      <Card>
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-3">
+            <DollarSign className="h-6 w-6 text-zinc-400" />
             Payment History
           </CardTitle>
-          <CardDescription>USDC transaction history</CardDescription>
+          <CardDescription className="text-zinc-400">
+            Your USDC transaction records
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {payments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No transactions yet
+            <div className="text-center py-12 text-zinc-500">
+              <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No payments recorded yet</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {payments.map((payment) => (
                 <div
                   key={payment.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex items-center justify-between p-5 rounded-xl bg-zinc-800/50 border border-zinc-700 hover:border-zinc-600 transition-all"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${
-                      payment.status === 'succeeded' ? 'bg-green-100' : 
-                      payment.status === 'failed' ? 'bg-red-100' : 'bg-gray-100'
-                    }`}>
-                      {payment.status === 'succeeded' ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : payment.status === 'failed' ? (
-                        <AlertCircle className="h-5 w-5 text-red-600" />
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "p-3 rounded-full",
+                        payment.status === "succeeded"
+                          ? "bg-emerald-500/20"
+                          : payment.status === "failed"
+                          ? "bg-red-500/20"
+                          : "bg-zinc-700"
+                      )}
+                    >
+                      {payment.status === "succeeded" ? (
+                        <CheckCircle className="h-6 w-6 text-emerald-400" />
+                      ) : payment.status === "failed" ? (
+                        <AlertCircle className="h-6 w-6 text-red-400" />
                       ) : (
-                        <Clock className="h-5 w-5 text-gray-600" />
+                        <Clock className="h-6 w-6 text-zinc-400" />
                       )}
                     </div>
                     <div>
-                      <div className="font-medium">
-                        {payment.amount} {payment.currency}
+                      <div className="flex items-center gap-3">
+                        <p className="text-xl font-semibold text-white">
+                          {payment.amount} {payment.currency}
+                        </p>
+                        <Badge
+                          variant={
+                            payment.status === "succeeded"
+                              ? "default"
+                              : payment.status === "failed"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {payment.status.toUpperCase()}
+                        </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(payment.createdAt).toLocaleDateString()}
-                      </div>
+                      <p className="text-sm text-zinc-400 mt-1">
+                        {new Date(payment.createdAt).toLocaleDateString(
+                          "en-US",
+                          { year: "numeric", month: "long", day: "numeric" }
+                        )}
+                      </p>
                       {payment.transactionHash && payment.chainId && (
                         <a
-                          href={getBlockExplorerUrl(payment.chainId, payment.transactionHash)}
+                          href={getBlockExplorerUrl(
+                            payment.chainId,
+                            payment.transactionHash
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 mt-2"
                         >
-                          View on Explorer
+                          View Transaction
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {payment.fromAddress && (
-                      <span className="text-sm text-muted-foreground">
+                  {payment.fromAddress && (
+                    <div className="text-right">
+                      <p className="text-sm text-zinc-500">From</p>
+                      <p className="font-mono text-sm text-zinc-300">
                         {formatAddress(payment.fromAddress)}
-                      </span>
-                    )}
-                    {getPaymentStatusBadge(payment.status)}
-                  </div>
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
