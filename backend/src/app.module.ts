@@ -31,6 +31,7 @@ import { SubscriptionModule } from './modules/subscription/subscription.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
+        ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: true } : false
       }),
     }),
     ScheduleModule.forRoot(),

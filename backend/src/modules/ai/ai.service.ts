@@ -7,7 +7,7 @@ import {
   TrainingDataType,
 } from '../training/training-data.entity';
 import type OpenRouter  from '@openrouter/sdk';
-import { dynamicImport } from '@/utils';
+import { dynamicImport } from '../../utils';
 
 interface CodeReviewContext {
   businessContext?: string;
