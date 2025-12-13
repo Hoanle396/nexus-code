@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
+import * as tunnel from 'localtunnel'
 
 // For Vercel serverless deployment
 let cachedApp;
@@ -76,7 +77,7 @@ async function createApp() {
   });
 
   await app.init();
-  
+
   cachedApp = expressApp;
   return expressApp;
 }
@@ -143,6 +144,21 @@ async function bootstrap() {
     `🚀 Application is running on: http://localhost:${port}/${apiPrefix}`,
   );
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+
+  // Setup tunnel in development mode
+  const nodeEnv = configService.get('NODE_ENV') || 'development';
+  if (nodeEnv === 'development') {
+    try {
+      (async () => {
+        const tunnelInstance = await tunnel({ port, subdomain: 'ai-code-reviewer' });
+        // the assigned public url for your tunnel
+        console.log(`Tunnel started at: ${tunnelInstance.url}`);
+      })();
+    } catch (error) {
+      console.warn('⚠️  Failed to create tunnel (localtunnel not installed?):', error.message);
+      console.warn('   Run: pnpm add -D localtunnel');
+    }
+  }
 }
 
 // Export for Vercel
