@@ -27,17 +27,62 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    if (!user) {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    const token = localStorage.getItem("token");
+    
+    // If no token and no user, redirect to login
+    if (!user && !token) {
       router.push("/login");
-    } else {
+      return;
+    }
+    
+    // If has token but no user, try to fetch profile
+    if (!user && token) {
+      fetchProfile();
+      return;
+    }
+    
+    // If has user, fetch invitations
+    if (user) {
       fetchPendingInvitations();
     }
-  }, [user, router]);
+  }, [user, router, isHydrated]);
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      if (response.ok) {
+        const userData = await response.json();
+        useAuthStore.getState().setAuth(userData, token!);
+      } else {
+        // Invalid token, logout
+        localStorage.removeItem("token");
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      localStorage.removeItem("token");
+      router.push("/login");
+    }
+  };
 
   const fetchPendingInvitations = async () => {
     try {
@@ -62,7 +107,15 @@ export default function DashboardLayout({
     router.push("/");
   };
 
-  if (!mounted || !user) {
+  if (!mounted || !isHydrated) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user && !localStorage.getItem("token")) {
     return null;
   }
 
@@ -161,17 +214,17 @@ export default function DashboardLayout({
           >
             <Avatar className="h-9 w-9 ring-2 ring-zinc-700">
               <AvatarFallback className="bg-gradient-to-br from-zinc-600 to-zinc-800 text-white font-semibold text-sm">
-                {user.fullName?.charAt(0).toUpperCase() ||
-                  user.email.charAt(0).toUpperCase()}
+                {user?.fullName?.charAt(0).toUpperCase() ||
+                  user?.email.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-base font-semibold text-white truncate">
-                  {user.fullName || "User"}
+                  {user?.fullName || "User"}
                 </p>
-                <p className="text-sm text-zinc-400 truncate">{user.email}</p>
+                <p className="text-sm text-zinc-400 truncate">{user?.email}</p>
               </div>
             )}
           </div>
