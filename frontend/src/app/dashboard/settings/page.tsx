@@ -78,10 +78,10 @@ export default function SettingsPage() {
               Settings
             </h1>
             <p className="text-zinc-400 text-sm sm:text-base">
-            Manage your account and integration tokens
-          </p>
+              Manage your account and integration tokens
+            </p>
+          </div>
         </div>
-        </div>  
       </div>
 
       {/* Account Information */}

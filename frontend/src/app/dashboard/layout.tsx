@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { Badge } from "@/components/ui/badge";
-import { 
-  LogOut, 
-  LayoutDashboard, 
-  Users, 
-  Mail, 
-  CreditCard, 
+import {
+  LogOut,
+  LayoutDashboard,
+  Users,
+  Mail,
+  CreditCard,
   Settings,
   ChevronLeft,
   ChevronRight
@@ -38,21 +38,21 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isHydrated) return;
-    
+
     const token = localStorage.getItem("token");
-    
+
     // If no token and no user, redirect to login
     if (!user && !token) {
       router.push("/login");
       return;
     }
-    
+
     // If has token but no user, try to fetch profile
     if (!user && token) {
       fetchProfile();
       return;
     }
-    
+
     // If has user, fetch invitations
     if (user) {
       fetchPendingInvitations();
@@ -68,7 +68,7 @@ export default function DashboardLayout({
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
+
       if (response.ok) {
         const userData = await response.json();
         useAuthStore.getState().setAuth(userData, token!);
@@ -125,9 +125,9 @@ export default function DashboardLayout({
   const menuItems = [
     { href: "/dashboard", label: "Projects", icon: LayoutDashboard },
     { href: "/dashboard/teams", label: "Teams", icon: Users },
-    { 
-      href: "/dashboard/invitations", 
-      label: "Invitations", 
+    {
+      href: "/dashboard/invitations",
+      label: "Invitations",
       icon: Mail,
       badge: pendingInvitations > 0 ? pendingInvitations : undefined
     },
@@ -170,7 +170,7 @@ export default function DashboardLayout({
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
-            
+
             return (
               <Link
                 key={item.href}

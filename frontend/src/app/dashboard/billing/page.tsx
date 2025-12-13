@@ -661,8 +661,8 @@ export default function BillingPage() {
                         payment.status === "succeeded"
                           ? "bg-emerald-500/20"
                           : payment.status === "failed"
-                          ? "bg-red-500/20"
-                          : "bg-zinc-700"
+                            ? "bg-red-500/20"
+                            : "bg-zinc-700"
                       )}
                     >
                       {payment.status === "succeeded" ? (
@@ -683,8 +683,8 @@ export default function BillingPage() {
                             payment.status === "succeeded"
                               ? "default"
                               : payment.status === "failed"
-                              ? "destructive"
-                              : "secondary"
+                                ? "destructive"
+                                : "secondary"
                           }
                         >
                           {payment.status.toUpperCase()}

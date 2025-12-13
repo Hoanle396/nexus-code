@@ -261,11 +261,11 @@ export default function InvitationsPage() {
                           className={cn(
                             "capitalize font-semibold px-3 py-1",
                             invitation.team.plan.toUpperCase() ===
-                              "ENTERPRISE" &&
-                              "bg-red-500/10 text-red-400 border-red-500/30",
+                            "ENTERPRISE" &&
+                            "bg-red-500/10 text-red-400 border-red-500/30",
                             invitation.team.plan.toUpperCase() ===
-                              "PROFESSIONAL" &&
-                              "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                            "PROFESSIONAL" &&
+                            "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                           )}
                         >
                           {invitation.team.plan.toLowerCase()}
@@ -282,9 +282,9 @@ export default function InvitationsPage() {
                       className={cn(
                         "px-4 py-2 font-bold capitalize text-sm",
                         invitation.role === "ADMIN" &&
-                          "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                        "bg-blue-500/10 text-blue-400 border-blue-500/30",
                         invitation.role === "MEMBER" &&
-                          "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                        "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                       )}
                     >
                       {invitation.role.toLowerCase()}

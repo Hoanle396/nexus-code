@@ -217,7 +217,7 @@ export default function NewProjectPage() {
                   {errors.repositoryUrl.message}
                 </p>
               )}
-              
+
               {/* Webhook Setup Reminder */}
               <div className="mt-3 flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                 <BookOpen className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />

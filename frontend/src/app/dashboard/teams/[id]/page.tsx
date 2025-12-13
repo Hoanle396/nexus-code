@@ -318,9 +318,9 @@ export default function TeamDetailPage() {
           className={cn(
             "text-lg px-4 py-2 font-semibold capitalize",
             team.plan === "ENTERPRISE" &&
-              "bg-red-500/20 text-red-400 border-red-500/50",
+            "bg-red-500/20 text-red-400 border-red-500/50",
             team.plan === "PROFESSIONAL" &&
-              "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+            "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
           )}
         >
           {team.plan.toLowerCase()}
@@ -446,8 +446,7 @@ export default function TeamDetailPage() {
                       <div className="flex items-center gap-3">
                         <p className="font-semibold text-white">
                           {member.user.firstName || member.user.lastName
-                            ? `${member.user.firstName || ""} ${
-                                member.user.lastName || ""
+                            ? `${member.user.firstName || ""} ${member.user.lastName || ""
                               }`.trim()
                             : member.user.email}
                         </p>
@@ -464,7 +463,7 @@ export default function TeamDetailPage() {
                           className={cn(
                             "capitalize",
                             member.role === "OWNER" &&
-                              "bg-orange-500/20 text-orange-400 border-orange-500/50"
+                            "bg-orange-500/20 text-orange-400 border-orange-500/50"
                           )}
                         >
                           {member.role.toLowerCase()}
