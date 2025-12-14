@@ -8,6 +8,7 @@ import {
 } from '../training/training-data.entity';
 import type OpenRouter from '@openrouter/sdk';
 import { dynamicImport } from '../../utils';
+import { TokenUsageService } from '../review/token-usage.service';
 
 export interface CodeReviewContext {
   businessContext?: string;
@@ -19,6 +20,8 @@ export interface CodeReviewContext {
   fileStatus?: string;
   additions?: number;
   deletions?: number;
+  projectId?: string;
+  reviewId?: string;
 }
 
 export interface LineComment {
@@ -55,6 +58,7 @@ export class AiService {
     private configService: ConfigService,
     @InjectRepository(TrainingData)
     private trainingDataRepository: Repository<TrainingData>,
+    private tokenUsageService: TokenUsageService,
   ) {
     this.openaiApiKey = this.configService.get('OPENAI_API_KEY');
   }
@@ -129,7 +133,13 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
 `;
 
     // Gọi AI API
-    const comments = await this.callAiApi(systemPrompt, userPrompt);
+    const comments = await this.callAiApi(
+      systemPrompt,
+      userPrompt,
+      context.projectId,
+      context.reviewId,
+      fileName,
+    );
 
     return comments;
   }
@@ -198,15 +208,17 @@ ${context.pullRequestTitle ? `**PR Title:** ${context.pullRequestTitle}` : ''}
 ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDescription}` : ''}
 
 **Your task:**
-1. Analyze each changed line (lines starting with + or -)
+1. Analyze each changed line (focus primarily on lines starting with +, i.e., new code)
 2. For each issue found, provide:
-   - The EXACT line number where the issue occurs
-   - Whether it's on the RIGHT (new code, +) or LEFT (old code, -) side
+   - The EXACT line number where the issue occurs (line number in the NEW file)
+   - side should be "RIGHT" (for new/added code)
    - The severity level: error, warning, info, or suggestion
    - Description of the issue
    - The problematic code snippet (codeError)
    - Suggested fix or improvement (codeSuggest)
    - Complete comment body with emoji prefix
+
+**IMPORTANT:** Focus on commenting on NEW code (lines with +). Only comment on added lines in the new version of the file.
 
 **Response format (JSON):**
 {
@@ -214,7 +226,7 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
   "lineComments": [
     {
       "line": <line_number>,
-      "side": "RIGHT" or "LEFT",
+      "side": "RIGHT",
       "severity": "error" | "warning" | "info" | "suggestion",
       "issue": "Clear description of the problem",
       "codeError": "The problematic code snippet",
@@ -233,43 +245,47 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
 
 **Important:**
 - Only comment on REAL issues, not generic observations
-- Be precise with line numbers from the diff
-- Focus on changed lines (+ for RIGHT side)
+- Be precise with line numbers from the diff (use line numbers from NEW file)
+- **ONLY comment on ADDED lines (lines with + prefix, RIGHT side)**
+- side must always be "RIGHT"
 - If code is good, return empty lineComments array
 - Provide specific codeError and codeSuggest when applicable
 - Use appropriate emoji: 🐛 error, ⚠️ warning, 📝 info, 💡 suggestion, 🔒 security, ✨ best practices
 `;
 
-    const response = await this.callAiApiForStructuredReview(systemPrompt, userPrompt);
+    const response = await this.callAiApiForStructuredReview(
+      systemPrompt,
+      userPrompt,
+      context.projectId,
+      context.reviewId,
+      fileName,
+    );
 
     // Validate line numbers against actual diff
     const validLineNumbers = new Set([...diffInfo.addedLines, ...diffInfo.deletedLines]);
     
-    console.log('Diff info - Added lines:', diffInfo.addedLines);
-    console.log('Diff info - Deleted lines:', diffInfo.deletedLines);
+    console.log('Diff info - Added lines (RIGHT):', diffInfo.addedLines.slice(0, 10), `... (${diffInfo.addedLines.length} total)`);
+    console.log('Diff info - Deleted lines (LEFT):', diffInfo.deletedLines.slice(0, 10), `... (${diffInfo.deletedLines.length} total)`);
     console.log('AI returned line comments:', response.lineComments.map(c => ({ line: c.line, side: c.side })));
 
     // Filter and validate line comments
+    // GitHub API only supports commenting on RIGHT side (new/added lines) reliably
     response.lineComments = response.lineComments
       .map(comment => ({
         ...comment,
         path: fileName,
+        side: 'RIGHT' as 'RIGHT' | 'LEFT', // Force RIGHT side for GitHub API compatibility
       }))
       .filter(comment => {
-        // For RIGHT side (new code), check if line is in added lines
-        if (comment.side === 'RIGHT' && !diffInfo.addedLines.includes(comment.line)) {
-          console.warn(`Skipping comment on line ${comment.line} - not in added lines`);
-          return false;
-        }
-        // For LEFT side (old code), check if line is in deleted lines  
-        if (comment.side === 'LEFT' && !diffInfo.deletedLines.includes(comment.line)) {
-          console.warn(`Skipping comment on line ${comment.line} - not in deleted lines`);
+        // Only allow comments on added lines (RIGHT side)
+        if (!diffInfo.addedLines.includes(comment.line)) {
+          console.warn(`⚠️  Skipping comment on line ${comment.line} - not in added lines. Available added lines: [${diffInfo.addedLines.slice(0, 10).join(', ')}${diffInfo.addedLines.length > 10 ? '...' : ''}]`);
           return false;
         }
         return true;
       });
 
-    console.log('Validated line comments:', response.lineComments.length);
+    console.log(`✅ Validated line comments: ${response.lineComments.length}/${response.lineComments.length + (response.lineComments.length === 0 ? 0 : 1)} passed validation`);
 
     return response;
   }
@@ -283,7 +299,8 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
     const chunks: any[] = [];
 
     const lines = diff.split('\n');
-    let currentLine = 0;
+    let newLineNumber = 0;  // Line number in new file (RIGHT side)
+    let oldLineNumber = 0;  // Line number in old file (LEFT side)
     let currentChunk: any = null;
 
     for (const line of lines) {
@@ -300,21 +317,27 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
           newLines: parseInt(chunkMatch[4] || '1'),
           lines: []
         };
-        currentLine = currentChunk.newStart;
+        oldLineNumber = currentChunk.oldStart;
+        newLineNumber = currentChunk.newStart;
         continue;
       }
 
       if (currentChunk) {
         if (line.startsWith('+') && !line.startsWith('+++')) {
-          addedLines.push(currentLine);
-          currentChunk.lines.push({ type: 'add', lineNumber: currentLine, content: line.substring(1) });
-          currentLine++;
+          // Added line - only exists in new file (RIGHT side)
+          addedLines.push(newLineNumber);
+          currentChunk.lines.push({ type: 'add', lineNumber: newLineNumber, content: line.substring(1) });
+          newLineNumber++;
         } else if (line.startsWith('-') && !line.startsWith('---')) {
-          deletedLines.push(currentLine);
-          currentChunk.lines.push({ type: 'delete', lineNumber: currentLine, content: line.substring(1) });
+          // Deleted line - only exists in old file (LEFT side)
+          deletedLines.push(oldLineNumber);
+          currentChunk.lines.push({ type: 'delete', lineNumber: oldLineNumber, content: line.substring(1) });
+          oldLineNumber++;
         } else if (line.startsWith(' ')) {
-          currentChunk.lines.push({ type: 'context', lineNumber: currentLine, content: line.substring(1) });
-          currentLine++;
+          // Context line - exists in both old and new files
+          currentChunk.lines.push({ type: 'context', newLine: newLineNumber, oldLine: oldLineNumber, content: line.substring(1) });
+          newLineNumber++;
+          oldLineNumber++;
         }
       }
     }
@@ -486,6 +509,9 @@ Good Comment: ${example.aiComment}
   private async callAiApi(
     systemPrompt: string,
     userPrompt: string,
+    projectId?: string,
+    reviewId?: string,
+    fileName?: string,
   ): Promise<string[]> {
     // TODO: Implement thật với OpenAI hoặc Anthropic
     // Đây là mock response
@@ -498,8 +524,9 @@ Good Comment: ${example.aiComment}
 
       });
 
+      const model = "gpt-4o-mini";
       const completion = await openRouter.chat.send({
-        model: "gpt-4o-mini",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -510,6 +537,19 @@ Good Comment: ${example.aiComment}
 
       const response = completion.choices[0].message.content;
       console.log('AI API response:', response);
+
+      // Track token usage
+      if (projectId && completion.usage) {
+        await this.tokenUsageService.trackUsage({
+          projectId,
+          reviewId,
+          model,
+          promptTokens: completion.usage.promptTokens || 0,
+          completionTokens: completion.usage.completionTokens || 0,
+          operation: 'code_review',
+          fileName,
+        }).catch(err => console.error('Failed to track token usage:', err));
+      }
 
       // Split response into multiple comments if needed
       const comments = (response as string)
@@ -534,6 +574,9 @@ Good Comment: ${example.aiComment}
   private async callAiApiForStructuredReview(
     systemPrompt: string,
     userPrompt: string,
+    projectId?: string,
+    reviewId?: string,
+    fileName?: string,
   ): Promise<ReviewResult> {
     try {
       const openRouterModule = await dynamicImport<typeof OpenRouter>('@openrouter/sdk');
@@ -542,8 +585,9 @@ Good Comment: ${example.aiComment}
         apiKey: this.configService.get('OPENROUTER_API_KEY'),
       });
 
+      const model = "gpt-4o-mini"; // or "anthropic/claude-3-sonnet" for better code understanding
       const completion = await openRouter.chat.send({
-        model: "gpt-4o-mini", // or "anthropic/claude-3-sonnet" for better code understanding
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -587,6 +631,19 @@ Good Comment: ${example.aiComment}
 
       const response = completion.choices[0].message.content as string;
       console.log('AI Structured Review response:', response);
+
+      // Track token usage
+      if (projectId && completion.usage) {
+        await this.tokenUsageService.trackUsage({
+          projectId,
+          reviewId,
+          model,
+          promptTokens: completion.usage.promptTokens || 0,
+          completionTokens: completion.usage.completionTokens || 0,
+          operation: 'structured_review',
+          fileName,
+        }).catch(err => console.error('Failed to track token usage:', err));
+      }
 
       // Parse JSON response
       const reviewResult = JSON.parse(response) as ReviewResult;
