@@ -100,6 +100,63 @@ export class WebhookService {
    */
   private async processReviewInBackground(reviewId: string, project: Project, prData: any) {
     try {
+      // Check subscription usage limit before reviewing
+      let subscription;
+      if (project.teamId) {
+        subscription = await this.subscriptionService.findByTeam(project.teamId);
+      } else if (project.userId) {
+        subscription = await this.subscriptionService.findByUser(project.userId);
+      }
+
+      if (subscription) {
+        const hasCredit = await this.subscriptionService.checkUsageLimit(subscription.id);
+        
+        if (!hasCredit) {
+          // Limit reached - send notifications and skip review
+          const usage = await this.subscriptionService.getUsage(subscription.id);
+          const limitMessage = `## ⚠️ Monthly Review Limit Reached\n\n` +
+            `Your AI code review quota has been exhausted for this billing period.\n\n` +
+            `### 📊 Usage Statistics\n` +
+            `- **Current Plan:** ${subscription.plan.toUpperCase()}\n` +
+            `- **Reviews Used:** ${usage.currentMonthReviews} / ${usage.monthlyReviewLimit}\n` +
+            `- **Remaining:** ${usage.remainingReviews} reviews\n` +
+            `- **Usage:** ${usage.usagePercentage}%\n\n` +
+            `### 💡 What's Next?\n` +
+            `- Upgrade to a higher plan for more reviews\n` +
+            `- Wait for your billing cycle to reset\n` +
+            `- Contact support for assistance\n\n` +
+            `### 🚀 Available Plans\n` +
+            `- **Starter:** 1,000 reviews/month - $29\n` +
+            `- **Professional:** 5,000 reviews/month - $99\n` +
+            `- **Enterprise:** Unlimited reviews - $299\n\n` +
+            `[Upgrade Your Plan →](${process.env.FRONTEND_URL || 'https://yourapp.com'}/dashboard/billing)`;
+
+          this.logger.warn(`⚠️ Review limit reached for subscription ${subscription.id}: ${usage.currentMonthReviews}/${usage.monthlyReviewLimit}`);
+
+          // Send to Discord
+          const botToken = project.user?.discordBotToken;
+          if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
+            await this.discordService.sendMessage(limitMessage, botToken, project.discordChannelId);
+          }
+
+          // Post comment to PR/MR
+          await this.postComment(
+            project,
+            prData.pullRequestNumber.toString(),
+            limitMessage,
+            null,
+            null,
+            project.type === ProjectType.GITHUB ? 'github' : 'gitlab',
+            prData.commitSha,
+          );
+
+          // Update review status
+          await this.reviewService.updateReviewStatus(reviewId, ReviewStatus.FAILED);
+          
+          return; // Stop processing
+        }
+      }
+
       // Send Discord notification
       const botToken = project.user?.discordBotToken;
       if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
