@@ -6,18 +6,10 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-  CheckCircle,
-  Sparkles,
-  Zap,
-  Code2,
-  ShieldCheck,
-  GitBranch,
-} from "lucide-react";
+import { CheckCircle, Sparkles, ShieldCheck, GitBranch } from "lucide-react";
 import { EncryptedText } from "@/components/ui/encrypted-text";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { CometCard } from "@/components/ui/comet-card";
-import { GlareCard } from "@/components/ui/glare-card";
 
 export default function LandingPage() {
   return (
@@ -185,8 +177,8 @@ interface AboutCardProps {
   desc: string;
 }
 const AboutCard = ({ icon, title, desc }: AboutCardProps) => (
-  <CometCard>
-    <div className="p-8 bg-zinc-900/60 border border-zinc-800 rounded-xl text-center  transition">
+  <CometCard className="">
+    <div className="p-8 w-full bg-zinc-900 border border-zinc-800 rounded-xl text-center  transition">
       <div className="flex justify-center mb-4">{icon}</div>
       <h3 className="text-xl font-semibold text-white">{title}</h3>
       <p className="mt-2 text-zinc-400">{desc}</p>
@@ -199,14 +191,16 @@ interface FeatureItemProps {
   desc: string;
 }
 const FeatureItem = ({ title, desc }: FeatureItemProps) => (
-  <GlareCard className="p-8 w-full bg-zinc-900/40 border border-zinc-800 rounded-xl hover:bg-zinc-900/60 hover:border-zinc-600 transition">
-    <h3 className="text-2xl font-semibold text-white mb-2">{title}</h3>
-    <p className="text-zinc-400">{desc}</p>
-    <div className="mt-4 flex items-center gap-2">
-      <CheckCircle className="h-5 w-5 text-green-400" />
-      <span className="text-zinc-300">Included</span>
+  <CometCard>
+    <div className="p-8 w-full bg-zinc-900/40 border border-zinc-800 rounded-xl hover:bg-zinc-900/60 hover:border-zinc-600 transition">
+      <h3 className="text-2xl font-semibold text-white mb-2">{title}</h3>
+      <p className="text-zinc-400">{desc}</p>
+      <div className="mt-4 flex items-center gap-2">
+        <CheckCircle className="h-5 w-5 text-green-400" />
+        <span className="text-zinc-300">Included</span>
+      </div>
     </div>
-  </GlareCard>
+  </CometCard>
 );
 
 interface WorkflowStepProps {
