@@ -173,6 +173,17 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
     // Parse diff to extract line numbers
     const diffInfo = this.parseDiff(codeSnippet);
 
+    // Build detailed mapping of line numbers to code content for AI
+    const lineMapping = diffInfo.chunks.flatMap(chunk => {
+      return chunk.lines
+        .filter(l => l.type === 'add')
+        .map(l => ({
+          lineNumber: l.lineNumber,
+          code: l.content,  // Keep full content including whitespace
+          type: 'added'
+        }));
+    });
+
     // Build list of changed lines for AI reference
     const changedLinesInfo = diffInfo.chunks.map(chunk => {
       const added = chunk.lines.filter(l => l.type === 'add').map(l => l.lineNumber);
@@ -190,14 +201,20 @@ Review the following code changes from file: **${fileName}**
 **File Status:** ${fileStatus || 'modified'}
 **Changes:** +${additions || 0} -${deletions || 0}
 
-**IMPORTANT - Line Numbers:**
-The diff shows changes in these ranges:
-${changedLinesInfo.map(info => `- Lines ${info.start}+: Added lines: [${info.addedLines.join(', ')}]`).join('\n')}
+**CRITICAL - Line Number Mapping:**
+Below is the EXACT mapping of line numbers to code in the NEW file (after changes).
+You MUST use these EXACT line numbers when commenting:
 
-When you comment on a line:
-- Use "side": "RIGHT" for NEW code (lines with +)
-- Use "side": "LEFT" for OLD code (lines with -)
-- The line number must be the EXACT line number from the new file (after changes)
+${lineMapping.length > 0 ? lineMapping.map(m => {
+  const displayCode = m.code.length > 100 ? m.code.substring(0, 100) + '...' : m.code;
+  return `Line ${m.lineNumber}: ${displayCode}`;
+}).join('\n') : 'No added lines found in the diff'}
+
+**IMPORTANT Rules:**
+- ONLY comment on lines that appear in the mapping above
+- Use the EXACT line number from the mapping
+- Always use "side": "RIGHT" (for new/added code)
+- If a line number is NOT in the mapping above, DO NOT comment on it
 
 **Git Diff:**
 \`\`\`diff
@@ -208,24 +225,28 @@ ${context.pullRequestTitle ? `**PR Title:** ${context.pullRequestTitle}` : ''}
 ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDescription}` : ''}
 
 **Your task:**
-1. Analyze each changed line (focus primarily on lines starting with +, i.e., new code)
+1. Review the code content shown in the "Line Number Mapping" section above
 2. For each issue found, provide:
-   - The EXACT line number where the issue occurs (line number in the NEW file)
-   - side should be "RIGHT" (for new/added code)
+   - The EXACT line number from the mapping (e.g., if you see "Line 42: const user = await..." and find an issue, use line: 42)
+   - side must ALWAYS be "RIGHT"
    - The severity level: error, warning, info, or suggestion
    - Description of the issue
-   - The problematic code snippet (codeError)
+   - The problematic code snippet (codeError) - copy from the mapping
    - Suggested fix or improvement (codeSuggest)
    - Complete comment body with emoji prefix
 
-**IMPORTANT:** Focus on commenting on NEW code (lines with +). Only comment on added lines in the new version of the file.
+**CRITICAL REMINDER:**
+- You can ONLY comment on line numbers that exist in the "Line Number Mapping" section
+- Use the EXACT line numbers shown in that mapping
+- Do NOT guess or calculate line numbers yourself
+- Do NOT comment on lines not listed in the mapping
 
 **Response format (JSON):**
 {
   "summary": "Brief overview of the review (1-2 sentences)",
   "lineComments": [
     {
-      "line": <line_number>,
+      "line": <exact_line_number_from_mapping>,
       "side": "RIGHT",
       "severity": "error" | "warning" | "info" | "suggestion",
       "issue": "Clear description of the problem",
@@ -235,6 +256,26 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
     }
   ],
   "overallFeedback": "General feedback about the entire change"
+}
+
+**Example:**
+If the mapping shows:
+  Line 42: const user = await userService.findById(id);
+  Line 43: return user.data;
+
+And you find an issue on line 43, your response should be:
+{
+  "lineComments": [
+    {
+      "line": 43,
+      "side": "RIGHT",
+      "severity": "error",
+      "issue": "Potential null pointer - user.data might be undefined",
+      "codeError": "return user.data;",
+      "codeSuggest": "return user?.data ?? null;",
+      "body": "🐛 Error: Potential null pointer - user.data might be undefined. Consider using optional chaining."
+    }
+  ]
 }
 
 **Severity Levels:**
@@ -262,11 +303,21 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
     );
 
     // Validate line numbers against actual diff
-    const validLineNumbers = new Set([...diffInfo.addedLines, ...diffInfo.deletedLines]);
+    const validLineNumbersSet = new Set(diffInfo.addedLines);
+    const originalCommentCount = response.lineComments.length;
     
-    console.log('Diff info - Added lines (RIGHT):', diffInfo.addedLines.slice(0, 10), `... (${diffInfo.addedLines.length} total)`);
-    console.log('Diff info - Deleted lines (LEFT):', diffInfo.deletedLines.slice(0, 10), `... (${diffInfo.deletedLines.length} total)`);
-    console.log('AI returned line comments:', response.lineComments.map(c => ({ line: c.line, side: c.side })));
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📊 Diff Analysis for:', fileName);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('✅ Added lines (RIGHT side):', diffInfo.addedLines.length, 'lines');
+    console.log('   Valid line numbers:', diffInfo.addedLines.slice(0, 20).join(', '), diffInfo.addedLines.length > 20 ? '...' : '');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🤖 AI returned', originalCommentCount, 'line comments:');
+    response.lineComments.forEach((c, idx) => {
+      const isValid = validLineNumbersSet.has(c.line);
+      console.log(`   ${idx + 1}. Line ${c.line} (${c.side}) ${isValid ? '✓' : '✗ INVALID'} - ${c.issue?.substring(0, 50)}...`);
+    });
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     // Filter and validate line comments
     // GitHub API only supports commenting on RIGHT side (new/added lines) reliably
@@ -278,14 +329,19 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
       }))
       .filter(comment => {
         // Only allow comments on added lines (RIGHT side)
-        if (!diffInfo.addedLines.includes(comment.line)) {
-          console.warn(`⚠️  Skipping comment on line ${comment.line} - not in added lines. Available added lines: [${diffInfo.addedLines.slice(0, 10).join(', ')}${diffInfo.addedLines.length > 10 ? '...' : ''}]`);
+        if (!validLineNumbersSet.has(comment.line)) {
+          console.warn(`❌ REJECTED: Comment on line ${comment.line} - not in valid added lines`);
+          console.warn(`   Issue: ${comment.issue}`);
+          console.warn(`   Hint: Valid lines are: [${Array.from(validLineNumbersSet).slice(0, 10).join(', ')}...]`);
           return false;
         }
+        console.log(`✅ ACCEPTED: Comment on line ${comment.line} - "${comment.issue?.substring(0, 60)}..."`);
         return true;
       });
 
-    console.log(`✅ Validated line comments: ${response.lineComments.length}/${response.lineComments.length + (response.lineComments.length === 0 ? 0 : 1)} passed validation`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`📝 Final result: ${response.lineComments.length}/${originalCommentCount} comments validated successfully`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     return response;
   }
