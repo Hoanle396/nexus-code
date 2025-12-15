@@ -118,46 +118,105 @@ export default function LandingPage() {
       </section>
 
       {/* WORKFLOW SECTION */}
-      <section className="py-28 px-6 bg-zinc-900/40 border-t border-zinc-800">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-white">How It Works</h2>
+      {/* WORKFLOW SECTION */}
+      <section className="relative py-32 px-6 bg-zinc-900/40 border-t border-zinc-800 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 top-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-indigo-500/10 blur-[120px]" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-16 max-w-6xl mx-auto">
-          <WorkflowStep
-            number={1}
-            title="Connect Your Repo"
-            desc="Integrate GitHub, GitLab, or Bitbucket."
-          />
-          <WorkflowStep
-            number={2}
-            title="AI Analyzes Code"
-            desc="Every commit is scanned for issues and improvements."
-          />
-          <WorkflowStep
-            number={3}
-            title="Instant Review Feedback"
-            desc="AI suggests fixes and improvements directly in your PR."
-          />
+        <div className="relative max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-white text-center">
+            How It Works
+          </h2>
+
+          <div className="relative mt-24 grid grid-cols-1 md:grid-cols-3 gap-16">
+            {/* Animated connector line */}
+            <WorkflowLine />
+
+            <WorkflowStep
+              number={1}
+              title="Connect Your Repo"
+              desc="Integrate GitHub, GitLab, or Bitbucket in minutes."
+              delay={0}
+            />
+            <WorkflowStep
+              number={2}
+              title="AI Analyzes Code"
+              desc="Every commit is scanned using advanced AI models."
+              delay={0.2}
+            />
+            <WorkflowStep
+              number={3}
+              title="Instant PR Feedback"
+              desc="Get inline suggestions, fixes, and best practices."
+              delay={0.4}
+            />
+          </div>
         </div>
       </section>
 
       {/* CTA SECTION */}
-      <section className="py-28 text-center px-6">
-        <div className="max-w-4xl mx-auto bg-gradient-to-r from-indigo-900 to-purple-900 rounded-3xl p-16 shadow-xl">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to level up your code quality?
-          </h2>
-          <p className="text-lg text-zinc-300 mb-8">
-            Start using AI Code Reviewer today — no credit card required.
-          </p>
-          <Link
-            href="/register"
-            className="px-10 py-4 bg-white text-black font-semibold rounded-md hover:bg-zinc-200 transition"
-          >
-            Get Started Free
-          </Link>
+      <section className="relative py-36 px-6 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute left-1/2 top-1/2 w-[700px] h-[700px] -translate-x-1/2 -translate-y-1/2 bg-indigo-500/20 blur-[140px]"
+          />
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="relative max-w-4xl mx-auto"
+        >
+          {/* Gradient border wrapper */}
+          <div className="relative rounded-3xl p-[1.5px] bg-gradient-to-r from-indigo-500/60 via-purple-500/60 to-pink-500/60">
+            <div className="rounded-3xl bg-zinc-950 px-10 py-16 text-center shadow-2xl">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                Ship better code.
+                <br />
+                <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  Automatically.
+                </span>
+              </h2>
+
+              <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10">
+                Let AI review every pull request, catch issues early, and
+                enforce best practices — before your code hits production.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                  href="/register"
+                  className="px-10 py-4 rounded-lg bg-white text-black font-semibold shadow-lg hover:bg-zinc-200 transition"
+                >
+                  Get Started Free
+                </motion.a>
+
+                <Link
+                  href="/pricing"
+                  className="px-10 py-4 rounded-lg border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white transition"
+                >
+                  View Pricing
+                </Link>
+              </div>
+
+              {/* Trust hint */}
+              <div className="mt-8 flex items-center justify-center gap-3 text-sm text-zinc-500">
+                <CheckCircle className="h-4 w-4 text-green-400" />
+                No credit card required · Free plan available
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* FOOTER */}
@@ -203,18 +262,68 @@ const FeatureItem = ({ title, desc }: FeatureItemProps) => (
   </CometCard>
 );
 
+const WorkflowLine = () => (
+  <div className="hidden md:block absolute top-[22%] left-[10%] right-[10%] h-px">
+    {/* Static gradient line */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent" />
+
+    {/* Moving signal */}
+    <motion.div
+      initial={{ x: "50%" }}
+      animate={{ x: "3500%" }}
+      transition={{
+        duration: 5,
+        ease: "linear",
+        repeat: Infinity,
+      }}
+      className="absolute top-1/2 -translate-y-1/2"
+    >
+      {/* Glow wrapper */}
+      <div className="relative flex w-6 h-6 -translate-y-1/2 items-center justify-center">
+        {/* Glow */}
+        <div className="absolute inset-0 w-6 h-6 bg-white/40 blur-md rounded-full" />
+        {/* Core dot */}
+        <div className="w-2.5 h-2.5 bg-white rounded-full" />
+      </div>
+    </motion.div>
+  </div>
+);
+
 interface WorkflowStepProps {
   number: number;
   title: string;
   desc: string;
+  delay?: number;
 }
 
-const WorkflowStep = ({ number, title, desc }: WorkflowStepProps) => (
-  <div className="text-center">
-    <div className="w-16 h-16 mx-auto rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-2xl font-bold text-white">
-      {number}
+const WorkflowStep = ({
+  number,
+  title,
+  desc,
+  delay = 0,
+}: WorkflowStepProps) => (
+  <motion.div
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, delay }}
+    className="relative text-center"
+  >
+    {/* Glow */}
+    <div className="absolute inset-0 -z-10">
+      <div className="mx-auto w-24 h-24 bg-indigo-500/20 blur-2xl rounded-full" />
     </div>
-    <h3 className="text-xl font-semibold text-white mt-4">{title}</h3>
-    <p className="text-zinc-400 mt-2 max-w-sm mx-auto">{desc}</p>
-  </div>
+
+    {/* Step number */}
+    <motion.div
+      animate={{ scale: [1, 1.08, 1] }}
+      transition={{ duration: 2, repeat: Infinity }}
+      className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg"
+    >
+      {number}
+    </motion.div>
+
+    <h3 className="text-xl font-semibold text-white mt-6">{title}</h3>
+    <p className="text-zinc-400 mt-3 max-w-sm mx-auto">{desc}</p>
+  </motion.div>
 );
