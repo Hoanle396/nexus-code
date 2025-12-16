@@ -68,6 +68,9 @@ export default function EditProjectPage() {
       setValue("autoReview", data.autoReview);
       setValue("isActive", data.isActive);
       setValue("discordChannelId", data.discordChannelId || "");
+      setValue("githubToken", data.githubToken || "");
+      setValue("gitlabToken", data.gitlabToken || "");
+      setValue("discordBotToken", data.discordBotToken || "");
     } catch (error: any) {
       toast.error("Unable to load project details");
       router.push("/dashboard");
@@ -238,6 +241,79 @@ export default function EditProjectPage() {
                 Receive PR notifications and AI review results directly in
                 Discord (bot setup required)
               </p>
+            </div>
+
+            {/* API Tokens Section */}
+            <div className="space-y-4 p-5 rounded-xl bg-zinc-800/20 border border-zinc-800">
+              <div className="space-y-2">
+                <h3 className="text-white text-base font-semibold">API Tokens</h3>
+                <p className="text-xs text-zinc-400">
+                  Configure tokens for this project to allow AI to post comments
+                </p>
+              </div>
+
+              {/* GitHub Token */}
+              <div className="space-y-3">
+                <Label
+                  htmlFor="githubToken"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
+                  GitHub Personal Access Token (Required for GitHub)
+                </Label>
+                <Input
+                  id="githubToken"
+                  type="password"
+                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  {...register("githubToken")}
+                />
+                <p className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                  Required scopes: repo, write:discussion
+                </p>
+              </div>
+
+              {/* GitLab Token */}
+              <div className="space-y-3">
+                <Label
+                  htmlFor="gitlabToken"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
+                  GitLab Personal Access Token (Required for GitLab)
+                </Label>
+                <Input
+                  id="gitlabToken"
+                  type="password"
+                  placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  {...register("gitlabToken")}
+                />
+                <p className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                  Required scopes: api, read_api, write_repository
+                </p>
+              </div>
+
+              {/* Discord Bot Token */}
+              <div className="space-y-3">
+                <Label
+                  htmlFor="discordBotToken"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
+                  Discord Bot Token (Optional)
+                </Label>
+                <Input
+                  id="discordBotToken"
+                  type="password"
+                  placeholder="MTAxMjM0NTY3ODkwMTIzNDU2Nw.GABCDE.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  {...register("discordBotToken")}
+                />
+                <p className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                  Used for sending PR notifications to your Discord channel
+                </p>
+              </div>
             </div>
 
             {/* Toggles Section */}

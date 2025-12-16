@@ -27,6 +27,15 @@ export class CreateProjectDto {
 
   @IsOptional()
   discordChannelId?: string;
+
+  @IsOptional()
+  githubToken?: string;
+
+  @IsOptional()
+  gitlabToken?: string;
+
+  @IsOptional()
+  discordBotToken?: string;
 }
 
 export class UpdateProjectDto {
@@ -49,4 +58,13 @@ export class UpdateProjectDto {
 
   @IsOptional()
   discordChannelId?: string;
+
+  @IsOptional()
+  githubToken?: string;
+
+  @IsOptional()
+  gitlabToken?: string;
+
+  @IsOptional()
+  discordBotToken?: string;
 }

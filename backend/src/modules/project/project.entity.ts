@@ -52,6 +52,15 @@ export class Project {
   @Column({ nullable: true })
   discordChannelId?: string;
 
+  @Column({ nullable: true })
+  githubToken?: string;
+
+  @Column({ nullable: true })
+  gitlabToken?: string;
+
+  @Column({ nullable: true })
+  discordBotToken?: string;
+
   @ManyToOne(() => User, (user) => user.projects)
   @JoinColumn({ name: 'userId' })
   user: User;

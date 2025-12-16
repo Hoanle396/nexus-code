@@ -10,6 +10,9 @@ export interface Project {
   autoReview: boolean;
   isActive: boolean;
   discordChannelId?: string;
+  githubToken?: string;
+  gitlabToken?: string;
+  discordBotToken?: string;
   teamId: string;
   team?: {
     id: string;
@@ -29,6 +32,9 @@ export interface CreateProjectData {
   reviewRules?: Record<string, any>;
   autoReview?: boolean;
   discordChannelId?: string;
+  githubToken?: string;
+  gitlabToken?: string;
+  discordBotToken?: string;
 }
 
 export interface UpdateProjectData {
@@ -38,6 +44,9 @@ export interface UpdateProjectData {
   autoReview?: boolean;
   isActive?: boolean;
   discordChannelId?: string;
+  githubToken?: string;
+  gitlabToken?: string;
+  discordBotToken?: string;
 }
 
 export const projectService = {

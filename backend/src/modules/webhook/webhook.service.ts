@@ -143,7 +143,7 @@ export class WebhookService {
           this.logger.warn(`⚠️ Review limit reached for subscription ${subscription.id}: ${usage.currentMonthReviews}/${usage.monthlyReviewLimit}`);
 
           // Send to Discord
-          const botToken = project.user?.discordBotToken;
+          const botToken = project.discordBotToken;
           if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
             await this.discordService.sendMessage(limitMessage, botToken, project.discordChannelId);
           }
@@ -167,7 +167,7 @@ export class WebhookService {
       }
 
       // Send Discord notification
-      const botToken = project.user?.discordBotToken;
+      const botToken = project.discordBotToken;
       if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
         await this.discordService.notifyPullRequest({
           projectName: project.name,
@@ -709,7 +709,7 @@ export class WebhookService {
               `[View Billing →](${process.env.FRONTEND_URL || 'https://yourapp.com'}/dashboard/billing)`;
 
             // Send warning to Discord only (not to PR to avoid spam)
-            const botToken = project.user?.discordBotToken;
+            const botToken = project.discordBotToken;
             if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
               await this.discordService.sendMessage(warningMessage, botToken, project.discordChannelId)
                 .catch(err => this.logger.error('Failed to send usage warning to Discord:', err));
@@ -723,7 +723,7 @@ export class WebhookService {
       }
 
       // Send Discord notification for review completion
-      const botToken = project.user?.discordBotToken;
+      const botToken = project.discordBotToken;
       if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
         await this.discordService.notifyReviewComplete({
           projectName: project.name,
@@ -739,9 +739,10 @@ export class WebhookService {
         reviewId,
         ReviewStatus.FAILED,
       );
+      
 
       // Send Discord notification for review failure
-      const botToken = project.user?.discordBotToken;
+      const botToken = project.discordBotToken;
       if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
         const review = await this.reviewService.findReviewById(reviewId);
         await this.discordService.notifyReviewComplete({
@@ -770,7 +771,7 @@ export class WebhookService {
 
   private async fetchGithubFileContents(project: Project, prData: any) {
     const octokit = new Octokit({
-      auth: project.user.githubToken,
+      auth: project.githubToken,
     });
 
     const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
@@ -826,7 +827,7 @@ export class WebhookService {
 
   private async fetchGitlabFileContents(project: Project, prData: any) {
     const api = new Gitlab({
-      token: project.user.gitlabToken,
+      token: project.gitlabToken,
       host: this.getGitlabHost(project.repositoryUrl),
     });
 
@@ -885,7 +886,7 @@ export class WebhookService {
     try {
       if (source === 'github') {
         const octokit = new Octokit({
-          auth: project.user.githubToken,
+          auth: project.githubToken,
         });
 
         const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
@@ -932,7 +933,7 @@ export class WebhookService {
         this.logger.log(`✅ Posted line comment on ${lineComment.path}:${lineComment.line}`);
       } else if (source === 'gitlab') {
         const api = new Gitlab({
-          token: project.user.gitlabToken,
+          token: project.gitlabToken,
           host: this.getGitlabHost(project.repositoryUrl),
         });
 
@@ -1025,7 +1026,7 @@ export class WebhookService {
     try {
       if (source === 'github') {
         const octokit = new Octokit({
-          auth: project.user.githubToken,
+          auth: project.githubToken,
         });
 
         const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
@@ -1048,7 +1049,7 @@ export class WebhookService {
         this.logger.log(`   In reply to: ${response.data.in_reply_to_id || 'N/A'}`);
       } else if (source === 'gitlab') {
         const api = new Gitlab({
-          token: project.user.gitlabToken,
+          token: project.gitlabToken,
           host: this.getGitlabHost(project.repositoryUrl),
         });
 
@@ -1115,7 +1116,7 @@ export class WebhookService {
     try {
       if (source === 'github') {
         const octokit = new Octokit({
-          auth: project.user.githubToken,
+          auth: project.githubToken,
         });
 
         const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
@@ -1134,7 +1135,7 @@ export class WebhookService {
         this.logger.log(`✅ Posted reply to general comment ${commentId}`);
       } else if (source === 'gitlab') {
         const api = new Gitlab({
-          token: project.user.gitlabToken,
+          token: project.gitlabToken,
           host: this.getGitlabHost(project.repositoryUrl),
         });
 
@@ -1168,7 +1169,7 @@ export class WebhookService {
     try {
       if (source === 'github') {
         const octokit = new Octokit({
-          auth: project.user.githubToken,
+          auth: project.githubToken,
         });
 
         // Parse repository URL
@@ -1197,7 +1198,7 @@ export class WebhookService {
         }
       } else if (source === 'gitlab') {
         const api = new Gitlab({
-          token: project.user.gitlabToken,
+          token: project.gitlabToken,
           host: this.getGitlabHost(project.repositoryUrl),
         });
 
@@ -1221,7 +1222,7 @@ export class WebhookService {
   private async enrichGitlabMRData(project: Project, prData: any) {
     try {
       const api = new Gitlab({
-        token: project.user.gitlabToken,
+        token: project.gitlabToken,
         host: this.getGitlabHost(project.repositoryUrl),
       });
 
@@ -1347,7 +1348,7 @@ export class WebhookService {
       let codeSnippet = '';
       if (isReviewComment && comment.path) {
         try {
-          const octokit = new Octokit({ auth: project.user.githubToken });
+          const octokit = new Octokit({ auth: project.githubToken });
           const [owner, repo] = this.parseGithubUrl(repositoryUrl);
           const { data: fileData } = await octokit.repos.getContent({
             owner,
@@ -1446,7 +1447,7 @@ export class WebhookService {
       if (isInlineComment && note.position) {
         try {
           const api = new Gitlab({
-            token: project.user.gitlabToken,
+            token: project.gitlabToken,
             host: this.getGitlabHost(project.repositoryUrl),
           });
 

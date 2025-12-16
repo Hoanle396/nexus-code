@@ -85,29 +85,30 @@ export class AuthService {
     };
   }
 
-  async updateTokens(userId: string, updateTokensDto: UpdateTokensDto) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+  // Deprecated: Tokens are now managed per project
+  // async updateTokens(userId: string, updateTokensDto: UpdateTokensDto) {
+  //   const user = await this.userRepository.findOne({ where: { id: userId } });
 
-    if (!user) {
-      throw new UnauthorizedException();
-    }
+  //   if (!user) {
+  //     throw new UnauthorizedException();
+  //   }
 
-    if (updateTokensDto.githubToken) {
-      user.githubToken = updateTokensDto.githubToken;
-    }
+  //   if (updateTokensDto.githubToken) {
+  //     user.githubToken = updateTokensDto.githubToken;
+  //   }
 
-    if (updateTokensDto.gitlabToken) {
-      user.gitlabToken = updateTokensDto.gitlabToken;
-    }
+  //   if (updateTokensDto.gitlabToken) {
+  //     user.gitlabToken = updateTokensDto.gitlabToken;
+  //   }
 
-    if (updateTokensDto.discordBotToken) {
-      user.discordBotToken = updateTokensDto.discordBotToken;
-    }
+  //   if (updateTokensDto.discordBotToken) {
+  //     user.discordBotToken = updateTokensDto.discordBotToken;
+  //   }
 
-    await this.userRepository.save(user);
+  //   await this.userRepository.save(user);
 
-    return { message: 'Tokens updated successfully' };
-  }
+  //   return { message: 'Tokens updated successfully' };
+  // }
 
   async getProfile(userId: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -119,9 +120,10 @@ export class AuthService {
     const { password, githubToken, gitlabToken, discordBotToken, ...result } = user;
     return {
       ...result,
-      hasGithubToken: !!githubToken,
-      hasGitlabToken: !!gitlabToken,
-      hasDiscordBotToken: !!discordBotToken,
+      // Tokens are now managed per project, keeping these for backward compatibility
+      hasGithubToken: false,
+      hasGitlabToken: false,
+      hasDiscordBotToken: false,
     };
   }
 }

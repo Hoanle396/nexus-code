@@ -55,13 +55,14 @@ export class AuthController {
     return this.authService.getProfile(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('tokens')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update GitHub/GitLab tokens' })
-  @ApiResponse({ status: 200, description: 'Tokens updated successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateTokens(@Request() req, @Body() updateTokensDto: UpdateTokensDto) {
-    return this.authService.updateTokens(req.user.id, updateTokensDto);
-  }
+  // Deprecated: Tokens are now managed per project
+  // @UseGuards(JwtAuthGuard)
+  // @Put('tokens')
+  // @ApiBearerAuth('JWT-auth')
+  // @ApiOperation({ summary: 'Update GitHub/GitLab tokens (Deprecated)' })
+  // @ApiResponse({ status: 200, description: 'Tokens updated successfully' })
+  // @ApiResponse({ status: 401, description: 'Unauthorized' })
+  // async updateTokens(@Request() req, @Body() updateTokensDto: UpdateTokensDto) {
+  //   return this.authService.updateTokens(req.user.id, updateTokensDto);
+  // }
 }

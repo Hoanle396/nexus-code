@@ -1,11 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -14,22 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Key, Save, Settings, User, Mail, CheckCircle } from "lucide-react";
-import { authService, UpdateTokensData } from "@/services/auth.service";
+import { Key, Settings, User, Mail } from "lucide-react";
+import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/auth";
-import { cn } from "@/lib/utils";
 import DashboardHeader from "@/components/layout/dashboard-header";
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuthStore();
-  const [loading, setLoading] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<UpdateTokensData>();
 
   useEffect(() => {
     loadProfile();
@@ -41,19 +27,6 @@ export default function SettingsPage() {
       updateUser(profile);
     } catch (error) {
       console.error("Failed to load profile");
-    }
-  };
-
-  const onSubmit = async (data: UpdateTokensData) => {
-    setLoading(true);
-    try {
-      await authService.updateTokens(data);
-      toast.success("Tokens updated successfully!");
-      await loadProfile();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to update tokens");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,7 +45,7 @@ export default function SettingsPage() {
       <DashboardHeader
         icon={<Settings className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
         title="Settings"
-        description="Manage your account and integration tokens"
+        description="Manage your account information"
       />
 
       {/* Account Information */}
@@ -117,155 +90,23 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* API Tokens */}
+      {/* Info Card */}
       <Card className="bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 shadow-2xl transition-all duration-300">
         <CardHeader className="border-b border-zinc-800/50 pb-5 pt-6">
           <CardTitle className="flex items-center gap-3 text-white text-2xl">
             <div className="p-2 rounded-lg bg-zinc-800">
               <Key className="h-5 w-5" />
             </div>
-            Integration Tokens
+            API Tokens
           </CardTitle>
-          <CardDescription className="text-zinc-400 text-sm mt-3">
-            Configure tokens to allow AI to post comments and send notifications
-          </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* GitHub Token */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="githubToken"
-                  className="text-zinc-200 text-sm font-semibold"
-                >
-                  GitHub Personal Access Token
-                </Label>
-                {user.hasGithubToken && (
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-semibold">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Configured
-                  </Badge>
-                )}
-              </div>
-              <Input
-                id="githubToken"
-                type="password"
-                placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
-                {...register("githubToken")}
-              />
-              <p className="text-xs text-zinc-500 flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                Create at:{" "}
-                <a
-                  href="https://github.com/settings/tokens"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
-                  GitHub → Settings → Developer settings → Personal access
-                  tokens
-                </a>
-                <br />
-                <strong>Required scopes:</strong> repo, write:discussion
-              </p>
-            </div>
-
-            {/* GitLab Token */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="gitlabToken"
-                  className="text-zinc-200 text-sm font-semibold"
-                >
-                  GitLab Personal Access Token
-                </Label>
-                {user.hasGitlabToken && (
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-semibold">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Configured
-                  </Badge>
-                )}
-              </div>
-              <Input
-                id="gitlabToken"
-                type="password"
-                placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
-                {...register("gitlabToken")}
-              />
-              <p className="text-xs text-zinc-500 flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                Create at:{" "}
-                <a
-                  href="https://gitlab.com/-/profile/personal_access_tokens"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
-                  GitLab → Preferences → Access Tokens
-                </a>
-                <br />
-                <strong>Required scopes:</strong> api, read_api,
-                write_repository
-              </p>
-            </div>
-
-            {/* Discord Bot Token */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="discordBotToken"
-                  className="text-zinc-200 text-sm font-semibold"
-                >
-                  Discord Bot Token (Optional)
-                </Label>
-                {user.hasDiscordBotToken && (
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-semibold">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Configured
-                  </Badge>
-                )}
-              </div>
-              <Input
-                id="discordBotToken"
-                type="password"
-                placeholder="MTAxMjM0NTY3ODkwMTIzNDU2Nw.GABCDE.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
-                {...register("discordBotToken")}
-              />
-              <p className="text-xs text-zinc-500 flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                Create bot at:{" "}
-                <a
-                  href="https://discord.com/developers/applications"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:underline"
-                >
-                  Discord Developer Portal → New Application → Bot
-                </a>
-                <br />
-                Used for sending PR notifications to your server
-              </p>
-            </div>
-
-            {/* Submit Button */}
-            <div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className={cn(
-                  "w-full sm:w-auto px-12 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
-                  loading && "opacity-60 cursor-not-allowed"
-                )}
-              >
-                <Save className="h-5 w-5 mr-2" />
-                {loading ? "Saving Changes..." : "Save Tokens"}
-              </Button>
-            </div>
-          </form>
+          <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+            <p className="text-blue-300 text-sm">
+              <strong>Note:</strong> API tokens (GitHub, GitLab, Discord Bot) are now configured per project. 
+              Go to your project settings to configure tokens for each individual project.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
