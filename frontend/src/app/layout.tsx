@@ -28,7 +28,50 @@ export default function RootLayout({
         <Providers>
           {children}
 
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#18181b',
+                color: '#fff',
+                border: '1px solid #34d399',
+                borderRadius: '12px',
+                padding: '16px',
+                fontSize: '14px',
+                fontWeight: '500',
+                boxShadow: '0 10px 40px rgba(52, 211, 153, 0.2)',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#34d399',
+                  secondary: '#18181b',
+                },
+                style: {
+                  background: '#18181b',
+                  border: '1px solid #34d399',
+                  boxShadow: '0 10px 40px rgba(52, 211, 153, 0.3)',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#18181b',
+                },
+                style: {
+                  background: '#18181b',
+                  border: '1px solid #ef4444',
+                  boxShadow: '0 10px 40px rgba(239, 68, 68, 0.3)',
+                },
+              },
+              loading: {
+                iconTheme: {
+                  primary: '#34d399',
+                  secondary: '#18181b',
+                },
+              },
+            }}
+          />
         </Providers>
       </body>
     </html>
