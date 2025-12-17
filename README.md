@@ -1,310 +1,715 @@
-# AI Code Reviewer
+# 🤖 AI Code Reviewer - Intelligent Code Review Platform
 
-Hệ thống AI Code Reviewer tự động với khả năng học từ feedback, hiểu business context và review code chính xác.
+<div align="center">
 
-## 🚀 Tính Năng
+![AI Code Reviewer](https://img.shields.io/badge/AI-Code%20Reviewer-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.0.0-orange?style=for-the-badge)
 
-### Core Features
-- ✅ **Đăng ký/Đăng nhập**: Xác thực người dùng với JWT
-- ✅ **Quản lý Project**: Thêm, sửa, xóa projects từ GitHub/GitLab
-- ✅ **GitHub/GitLab Token**: Cấu hình tokens để AI có thể comment
-- ✅ **Business Context**: Cung cấp SRS, business logic cho AI
-- ✅ **Auto Review**: Webhook tự động review khi có PR mới
-- ✅ **AI Comment**: Comment trực tiếp lên PR với suggestions
-- ✅ **Reply Comment**: AI có thể reply lại comments của users
-- ✅ **Training từ Feedback**: Hệ thống học từ feedback để cải thiện
+**AI-Powered Code Review Platform with Team Collaboration & Web3 Payment**
 
-### Tech Stack
+[Features](#-tính-năng-nổi-bật) • [Demo](#-demo) • [Tech Stack](#-công-nghệ) • [Setup](#-cài-đặt) • [Pricing](#-pricing)
 
-**Backend:**
-- NestJS 10
-- TypeORM + PostgreSQL
-- JWT Authentication
-- OpenAI / Anthropic AI
-- GitHub & GitLab API Integration
+</div>
 
-**Frontend:**
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Zustand (State Management)
-- React Hook Form
-- Axios
+---
 
-## 📁 Cấu Trúc Project
+## 📖 Tổng quan
+
+**AI Code Reviewer** là nền tảng SaaS thông minh giúp tự động hóa code review bằng AI, kết hợp khả năng học từ feedback và hiểu business context. Nền tảng hỗ trợ team collaboration, subscription management, và payment qua Web3 USDC.
+
+### 🎯 Problem Statement
+
+Code review thủ công tốn **2-4 giờ/ngày** cho mỗi senior developer. Chất lượng review không đồng nhất, context về business logic thường bị mất, và feedback không được tái sử dụng hiệu quả.
+
+### 💡 Solution
+
+AI Code Reviewer cung cấp:
+- ✅ AI reviewer 24/7 với khả năng hiểu business context
+- ✅ Học từ team feedback để cải thiện liên tục
+- ✅ Team collaboration với role-based permissions
+- ✅ Subscription tiers linh hoạt (FREE → ENTERPRISE)
+- ✅ Web3 payment với USDC trên multiple chains
+
+---
+
+## ✨ Tính năng Nổi bật
+
+### 🤖 AI-Powered Code Review
+
+#### Core AI Features
+- **Multi-AI Support**: GPT-4, Claude, OpenRouter
+- **Business Context Awareness**: AI hiểu domain từ SRS/requirements
+- **Training from Feedback**: Học từ team corrections và suggestions
+- **Contextual Comments**: Comment có ngữ cảnh, không generic
+- **Auto Reply**: AI reply lại user comments trên PR
+
+#### Supported Platforms
+- 🐙 **GitHub**: Full integration với webhooks
+- 🦊 **GitLab**: Complete API support
+- 💬 **Discord**: Real-time notifications
+
+### 👥 Team Collaboration
+
+#### Multi-tenant System
+- **Personal Workspace**: Auto-created khi đăng ký
+- **Unlimited Teams**: Tạo teams cho các projects khác nhau
+- **Invitation System**: Secure token-based invitations (7-day expiration)
+- **Member Management**: Add, remove, update roles
+
+#### Role-Based Permissions
+| Role | Permissions |
+|------|-------------|
+| 👑 **OWNER** | Full control, billing, delete team |
+| 🔷 **ADMIN** | Manage members, projects, settings |
+| 🟢 **MEMBER** | Create projects, view reviews |
+| ⚪ **VIEWER** | Read-only access |
+
+### 💰 Subscription & Billing
+
+#### 4 Pricing Tiers
+
+<table>
+<tr>
+<th>FREE</th>
+<th>STARTER</th>
+<th>PROFESSIONAL</th>
+<th>ENTERPRISE</th>
+</tr>
+<tr>
+<td>
+
+**$0/month**
+- 1 project
+- 1 member
+- 100 reviews/month
+- GitHub & GitLab
+- Basic AI
+
+</td>
+<td>
+
+**$29/month**
+- 5 projects
+- 5 members
+- 1,000 reviews/month
+- Custom rules
+- Priority support
+
+</td>
+<td>
+
+**$99/month**
+- 20 projects
+- 20 members
+- 5,000 reviews/month
+- AI training
+- Analytics
+- 24/7 support
+
+</td>
+<td>
+
+**$299/month**
+- ♾️ Unlimited
+- ♾️ Unlimited
+- ♾️ Unlimited
+- Dedicated model
+- SLA guarantee
+- Account manager
+
+</td>
+</tr>
+</table>
+
+#### Usage Tracking
+- 📊 Real-time usage monitoring
+- 📈 Visual progress bars
+- ⚠️ Alerts at 80% limit
+- 💎 Upgrade suggestions
+
+### ⛓️ Web3 Payment Innovation
+
+#### Multi-Chain USDC Support
+
+**Mainnet Networks:**
+- Ethereum (Chain ID: 1)
+- Polygon (Chain ID: 137) - **Recommended (Low gas)**
+- Arbitrum (Chain ID: 42161)
+- Base (Chain ID: 8453)
+
+**Testnet Networks:**
+- Ethereum Sepolia, Polygon Mumbai
+- Arbitrum Sepolia, Base Sepolia
+
+#### Payment Features
+- 💳 **Wallet Integration**: MetaMask, WalletConnect
+- ✅ **On-chain Verification**: Auto-verify transactions
+- 🔒 **Secure**: Validate amount, receiver, token contract
+- 🌍 **Global Access**: No credit card needed
+- ⚡ **Instant Settlement**: No waiting periods
+- 💸 **Low Fees**: 0.1% vs 2.9% traditional payments
+
+---
+
+## 🏗️ Kiến trúc Hệ thống
+
+### Architecture Overview
 
 ```
-ai/
-├── backend/                 # NestJS Backend
-│   ├── src/
-│   │   ├── modules/
-│   │   │   ├── auth/       # Authentication module
-│   │   │   ├── user/       # User management
-│   │   │   ├── project/    # Project management
-│   │   │   ├── review/     # Review & comments
-│   │   │   ├── webhook/    # GitHub/GitLab webhooks
-│   │   │   ├── ai/         # AI service integration
-│   │   │   └── training/   # Training data management
-│   │   ├── config/         # Configuration
-│   │   ├── app.module.ts
-│   │   └── main.ts
-│   ├── package.json
-│   └── .env.example
-│
-└── frontend/               # Next.js Frontend
-    ├── src/
-    │   ├── app/           # App Router pages
-    │   │   ├── dashboard/ # Dashboard pages
-    │   │   ├── login/
-    │   │   └── register/
-    │   ├── components/    # React components
-    │   ├── services/      # API services
-    │   ├── store/         # Zustand stores
-    │   └── lib/           # Utilities
-    ├── package.json
-    └── .env.local
+┌─────────────────────────────────────────────────────────────┐
+│                         Frontend (Next.js 14)               │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────┐   │
+│  │Dashboard│  │ Teams   │  │Projects │  │   Billing   │   │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────────┘   │
+│                          ↓ API Calls ↓                      │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Backend (NestJS 10)                      │
+│  ┌──────┐  ┌──────┐  ┌─────────┐  ┌──────────┐  ┌────────┐│
+│  │ Auth │  │ Team │  │ Project │  │Subscription││Webhook ││
+│  └──────┘  └──────┘  └─────────┘  └──────────┘  └────────┘│
+│  ┌──────┐  ┌─────────┐  ┌────────────┐  ┌────────────────┐│
+│  │Review│  │Training │  │     AI     │  │  Web3 Payment  ││
+│  └──────┘  └─────────┘  └────────────┘  └────────────────┘│
+└─────────────────────────────────────────────────────────────┘
+          ↓                    ↓                    ↓
+┌──────────────┐    ┌──────────────────┐    ┌─────────────┐
+│  PostgreSQL  │    │  AI APIs         │    │ Blockchains │
+│  Database    │    │  • OpenAI        │    │ • Ethereum  │
+│              │    │  • Anthropic     │    │ • Polygon   │
+│              │    │  • OpenRouter    │    │ • Arbitrum  │
+└──────────────┘    └──────────────────┘    └─────────────┘
 ```
 
-## 🛠️ Cài Đặt
+### Module Architecture
+
+```
+backend/src/modules/
+├── auth/              → JWT authentication, user management
+├── team/              → Multi-tenant team management
+│   ├── entities/      → Team, TeamMember
+│   ├── services/      → 12 methods (CRUD, invitations)
+│   └── controllers/   → 11 REST endpoints
+├── project/           → Repository integration
+│   ├── entities/      → Project (linked to team)
+│   └── services/      → GitHub/GitLab API
+├── review/            → AI review engine
+│   ├── entities/      → Review, ReviewComment
+│   └── services/      → AI analysis, comment posting
+├── webhook/           → GitHub/GitLab event handlers
+├── training/          → ML feedback loop
+│   ├── entities/      → TrainingData
+│   └── services/      → Learn from feedback
+├── subscription/      → Billing & usage tracking
+│   ├── entities/      → Subscription, Payment
+│   └── services/      → Plans, usage limits
+├── ai/                → AI provider abstraction
+│   └── services/      → Multi-model support
+└── security/          → Web3 payment verification
+    └── services/      → On-chain transaction validation
+```
+
+---
+
+## 🛠️ Công nghệ
+
+### Frontend Stack
+
+```typescript
+{
+  "framework": "Next.js 14",         // App Router, Server Components
+  "language": "TypeScript",          // Type safety
+  "styling": "Tailwind CSS",         // Utility-first CSS
+  "state": "Zustand",                // Lightweight state management
+  "forms": "React Hook Form + Zod",  // Form validation
+  "ui": "Radix UI + shadcn/ui",      // Accessible components
+  "web3": "ethers.js v6",            // Blockchain integration
+  "animations": "Framer Motion"      // Smooth animations
+}
+```
+
+### Backend Stack
+
+```typescript
+{
+  "framework": "NestJS 10",          // Enterprise architecture
+  "language": "TypeScript",          // Type safety
+  "database": "PostgreSQL + TypeORM", // Production-grade DB
+  "auth": "JWT + Passport",          // Authentication
+  "validation": "class-validator",   // DTO validation
+  "ai": {
+    "openai": "GPT-4",               // Primary AI
+    "anthropic": "Claude",           // Alternative
+    "openrouter": "Multi-model"      // Fallback
+  },
+  "blockchain": "ethers.js",         // Web3 integration
+  "integrations": [
+    "@octokit/rest",                 // GitHub API
+    "@gitbeaker/node",               // GitLab API
+    "discord.js"                     // Discord bot
+  ]
+}
+```
+
+### Infrastructure
+
+- ☁️ **Deployment**: Docker, Docker Compose
+- 🗄️ **Database**: PostgreSQL 14+
+- 🔗 **RPC Providers**: Alchemy, Infura, QuickNode
+- 📧 **Email**: (Ready for SendGrid/AWS SES)
+- 📊 **Monitoring**: (Ready for Datadog/Sentry)
+
+---
+
+## 🚀 Cài đặt
 
 ### Prerequisites
+
 - Node.js 18+
 - PostgreSQL 14+
-- npm hoặc yarn
+- pnpm/npm
+- MetaMask wallet (for Web3 features)
 
-### Backend Setup
+### Quick Start
+
+#### 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/yourusername/ai-code-reviewer.git
+cd ai-code-reviewer
+```
+
+#### 2️⃣ Backend Setup
 
 ```bash
 cd backend
 
 # Install dependencies
-npm install
+pnpm install
 
-# Copy .env.example to .env và điền thông tin
+# Setup environment
 cp .env.example .env
+# Edit .env with your credentials
 
-# Chỉnh sửa .env với thông tin của bạn:
-# - Database credentials
-# - JWT secret
-# - OpenAI/Anthropic API key
-
-# Run migrations (nếu có)
-npm run migration:run
+# Run migrations
+pnpm migration:run
 
 # Start development server
-npm run start:dev
+pnpm start:dev
 ```
 
-Backend sẽ chạy tại: `http://localhost:3001`
+**Backend runs at:** `http://localhost:3001`
 
-### Frontend Setup
+#### 3️⃣ Frontend Setup
 
 ```bash
 cd frontend
 
 # Install dependencies
-npm install
+pnpm install
 
-# Copy .env.local (đã có sẵn)
-# Chỉnh sửa NEXT_PUBLIC_API_URL nếu cần
+# Setup environment (already configured)
+# Edit .env.local if needed
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
-Frontend sẽ chạy tại: `http://localhost:3000`
+**Frontend runs at:** `http://localhost:3000`
 
-## 🔧 Cấu Hình
+### Environment Configuration
 
-### 1. Database Setup
+#### Backend `.env`
 
-Tạo database PostgreSQL:
-
-```sql
-CREATE DATABASE ai_code_reviewer;
-```
-
-### 2. Environment Variables
-
-**Backend (.env):**
 ```env
-NODE_ENV=development
-PORT=3001
-API_PREFIX=api/v1
-
+# Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_DATABASE=ai_code_reviewer
 
+# JWT Security
 JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRATION=7d
 
-OPENAI_API_KEY=sk-xxx
-ANTHROPIC_API_KEY=sk-ant-xxx
+# AI APIs
+OPENAI_API_KEY=sk-your-openai-key
+ANTHROPIC_API_KEY=sk-ant-your-claude-key
 
-WEBHOOK_SECRET=your-webhook-secret
-CORS_ORIGIN=http://localhost:3000
+# Web3 Payment
+WEB3_RECEIVER_ADDRESS=0xYourWalletAddress
+
+# Ethereum RPCs
+ETHEREUM_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR-KEY
+POLYGON_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/YOUR-KEY
+ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/YOUR-KEY
+BASE_RPC_URL=https://base-mainnet.g.alchemy.com/v2/YOUR-KEY
+
+# Testnets
+ETHEREUM_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR-KEY
+POLYGON_MUMBAI_RPC_URL=https://polygon-mumbai.g.alchemy.com/v2/YOUR-KEY
 ```
 
-**Frontend (.env.local):**
+#### Frontend `.env.local`
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
 ```
 
-### 3. GitHub/GitLab Token
+---
 
-**GitHub Personal Access Token:**
-1. Vào GitHub → Settings → Developer settings → Personal access tokens
-2. Generate new token (classic)
-3. Chọn scopes: `repo`, `write:discussion`
-4. Copy token và paste vào settings trong app
+## 📘 Hướng dẫn Sử dụng
 
-**GitLab Personal Access Token:**
-1. Vào GitLab → Preferences → Access Tokens
-2. Tạo token với scope: `api`, `read_api`, `write_repository`
-3. Copy token và paste vào settings trong app
+### 1️⃣ Đăng ký & Đăng nhập
 
-### 4. Webhook Setup
+1. Truy cập `http://localhost:3000`
+2. Click **"Đăng ký"**
+3. Điền thông tin → Submit
+4. System tự động tạo Personal Team
+5. Redirect to Dashboard
 
-**GitHub:**
-1. Vào Repository → Settings → Webhooks → Add webhook
-2. Payload URL: `https://your-domain.com/api/v1/webhook/github`
-3. Content type: `application/json`
-4. Events: Select `Pull requests` và `Pull request review comments`
+### 2️⃣ Tạo Team (Optional)
 
-**GitLab:**
-1. Vào Project → Settings → Webhooks
-2. URL: `https://your-domain.com/api/v1/webhook/gitlab`
-3. Trigger: `Merge request events`, `Comments`
-4. Secret token: (optional)
+```
+Dashboard → Teams → "Tạo Team Mới"
+```
 
-## 📖 Sử Dụng
+- Nhập team name, description
+- Chọn plan (FREE/STARTER/PRO/ENTERPRISE)
+- Submit → Team created
 
-### 1. Đăng Ký & Đăng Nhập
-- Truy cập `http://localhost:3000`
-- Đăng ký tài khoản mới
-- Đăng nhập với email/password
+### 3️⃣ Invite Team Members
 
-### 2. Cấu Hình Tokens
-- Vào Settings
-- Nhập GitHub/GitLab Personal Access Token
-- Save tokens
+```
+Teams → [Team Detail] → Members tab → "Invite Member"
+```
 
-### 3. Tạo Project
-- Vào Dashboard → Add Project
-- Nhập thông tin:
-  - Tên project
-  - Platform (GitHub/GitLab)
-  - Repository URL
-  - Business Context (mô tả về business logic)
-- Enable Auto Review
-- Save
+- Enter email → Generate invitation
+- Copy link và gửi cho member
+- Member click link → Accept invitation
+- Member được add vào team
 
-### 4. Setup Webhook
-- Copy webhook URL từ project details
-- Configure webhook trên GitHub/GitLab
-- Test webhook
+### 4️⃣ Cấu hình GitHub/GitLab Token
 
-### 5. Auto Review
-- Tạo Pull Request trên GitHub/GitLab
-- AI sẽ tự động review và comment
-- Bạn có thể reply comment
-- AI sẽ học từ feedback của bạn
+```
+Dashboard → Settings → API Tokens
+```
 
-## 🏗️ Database Schema
+**GitHub Token:**
+- Settings → Developer settings → Personal access tokens
+- Scopes: `repo`, `write:discussion`
 
-### Users
-- id, email, password, fullName
-- githubToken, gitlabToken
-- isActive, createdAt, updatedAt
+**GitLab Token:**
+- Preferences → Access Tokens
+- Scopes: `api`, `read_api`, `write_repository`
 
-### Projects
-- id, name, type (github/gitlab)
-- repositoryUrl, webhookUrl, webhookSecret
-- businessContext, reviewRules
-- autoReview, isActive
-- userId (foreign key)
+### 5️⃣ Tạo Project
 
-### Reviews
-- id, pullRequestId, pullRequestNumber
-- pullRequestTitle, pullRequestUrl
-- branch, author, status
-- filesChanged, aiAnalysis
-- projectId (foreign key)
+```
+Dashboard → Projects → "Tạo Project Mới"
+```
 
-### ReviewComments
-- id, externalCommentId, type
-- content, filePath, lineNumber
-- author, parentCommentId
-- isTrainingData, metadata
-- reviewId (foreign key)
+**Form fields:**
+- **Name**: Tên project
+- **Team**: Chọn team
+- **Platform**: GitHub hoặc GitLab
+- **Repository URL**: `https://github.com/user/repo`
+- **Business Context**: Mô tả business logic, coding standards
+- **Auto Review**: Enable/Disable
 
-### TrainingData
-- id, projectId, codeSnippet
-- aiComment, userFeedback
-- correctedComment, type
-- context, useCount
+### 6️⃣ Setup Webhook
 
-## 🤖 AI Review Flow
+**On GitHub:**
+```
+Repository → Settings → Webhooks → Add webhook
+```
+- Payload URL: `https://yourdomain.com/api/v1/webhook/github`
+- Content type: `application/json`
+- Events: `Pull requests`, `Pull request comments`
 
-1. **Webhook nhận PR event** → Tạo Review record
-2. **Fetch file changes** → Lấy code diff
-3. **Load business context** → Lấy SRS, rules từ project
-4. **Load training data** → Lấy examples từ feedback trước
-5. **Call AI API** → OpenAI/Anthropic review code
-6. **Post comments** → Comment lên GitHub/GitLab
-7. **Save comments** → Lưu vào database
-8. **User feedback** → Học và cải thiện
+**On GitLab:**
+```
+Project → Settings → Webhooks
+```
+- URL: `https://yourdomain.com/api/v1/webhook/gitlab`
+- Trigger: `Merge request events`, `Comments`
 
-## 🎯 Roadmap
+### 7️⃣ AI Review Flow
 
-- [ ] Support Bitbucket
-- [ ] Custom AI models (fine-tuning)
-- [ ] Code quality metrics dashboard
-- [ ] Team collaboration features
-- [ ] Slack/Discord notifications
-- [ ] Multi-language support
-- [ ] CI/CD integration
+```
+1. Tạo Pull Request trên GitHub/GitLab
+2. Webhook triggers backend
+3. Backend fetches code changes
+4. AI analyzes với business context + training data
+5. AI posts comments trực tiếp lên PR
+6. Developer reply/react → Training data updated
+7. Next review: AI smarter với team context
+```
 
-## 📝 API Documentation
+### 8️⃣ Upgrade Subscription (Web3)
 
-### Authentication
-- `POST /api/v1/auth/register` - Đăng ký
-- `POST /api/v1/auth/login` - Đăng nhập
-- `GET /api/v1/auth/profile` - Lấy profile
-- `PUT /api/v1/auth/tokens` - Update tokens
+```
+Dashboard → Billing → "Upgrade Plan"
+```
 
-### Projects
-- `GET /api/v1/projects` - List projects
-- `POST /api/v1/projects` - Tạo project
-- `GET /api/v1/projects/:id` - Chi tiết project
-- `PATCH /api/v1/projects/:id` - Update project
-- `DELETE /api/v1/projects/:id` - Xóa project
-
-### Webhooks
-- `POST /api/v1/webhook/github` - GitHub webhook
-- `POST /api/v1/webhook/gitlab` - GitLab webhook
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-MIT License
-
-## 👥 Authors
-
-Your Name - AI Code Reviewer Team
-
-## 🙏 Acknowledgments
-
-- OpenAI for GPT API
-- Anthropic for Claude API
-- NestJS & Next.js communities
+**Payment Flow:**
+1. Connect MetaMask wallet
+2. Select plan (STARTER/PRO/ENTERPRISE)
+3. Choose network (Polygon recommended)
+4. Confirm USDC transfer
+5. Wait for blockchain confirmation
+6. Subscription activated automatically
 
 ---
 
-**Happy Coding! 🚀**
+## 💎 Web3 Payment Guide
+
+### Setup MetaMask
+
+1. Install [MetaMask](https://metamask.io/)
+2. Create wallet hoặc import existing
+3. Add networks (Polygon, Arbitrum, Base)
+4. Get testnet USDC from faucets
+
+### Get Testnet USDC
+
+**For Testing:**
+- [Aave Faucet](https://staging.aave.com/faucet/) - Sepolia, Mumbai
+- [Circle Faucet](https://faucet.circle.com/) - Testnet USDC
+- [Base Faucet](https://www.coinbase.com/faucets/base-sepolia-faucet)
+
+### Payment on Polygon (Recommended)
+
+**Why Polygon?**
+- ⚡ Ultra-low gas (~$0.01 per transaction)
+- ✅ Fast confirmation (~2 seconds)
+- 🔒 Ethereum security
+- 💰 Perfect for recurring payments
+
+**Steps:**
+1. Switch MetaMask to Polygon network
+2. Ensure sufficient USDC balance
+3. Click "Pay with USDC"
+4. Confirm transaction
+5. Wait for confirmation
+6. Done! Subscription active
+
+---
+
+## 🎓 AI Training System
+
+### How It Works
+
+```
+User Comment:
+"Good suggestion, but we use Zod for validation, not Joi"
+         ↓
+System extracts:
+- Context: Validation library preference
+- Team standard: Zod
+- Code pattern: validation schemas
+         ↓
+Saves to TrainingData entity
+         ↓
+Next AI Review:
+Prompt includes: "Team prefers Zod for validation"
+         ↓
+AI suggests: "Consider using Zod schema..."
+```
+
+### Training Data Types
+
+- ✅ **Approved Comments**: Good suggestions
+- ❌ **Rejected Comments**: Wrong suggestions
+- 💬 **User Corrections**: Feedback to improve
+- 📚 **Code Patterns**: Team conventions
+
+---
+
+## 📊 Database Schema
+
+### Core Entities
+
+```typescript
+User {
+  id, email, password, fullName
+  githubToken, gitlabToken
+  isActive, createdAt
+}
+
+Team {
+  id, name, description
+  ownerId, plan (FREE/STARTER/PRO/ENTERPRISE)
+  isActive, createdAt
+}
+
+TeamMember {
+  id, teamId, userId
+  role (OWNER/ADMIN/MEMBER/VIEWER)
+  status (PENDING/ACCEPTED/DECLINED)
+  invitationToken, invitationExpiry
+}
+
+Project {
+  id, name, type (github/gitlab)
+  teamId, repositoryUrl
+  businessContext, reviewRules
+  autoReview, isActive
+}
+
+Review {
+  id, projectId, pullRequestNumber
+  pullRequestTitle, pullRequestUrl
+  branch, author, status
+  aiAnalysis, filesChanged
+}
+
+ReviewComment {
+  id, reviewId, externalCommentId
+  content, filePath, lineNumber
+  author, parentCommentId
+  isTrainingData
+}
+
+TrainingData {
+  id, projectId, codeSnippet
+  aiComment, userFeedback
+  correctedComment, useCount
+}
+
+Subscription {
+  id, teamId, plan
+  status, billingCycle (monthly/yearly)
+  currentPeriodStart, currentPeriodEnd
+  walletAddress
+}
+
+Payment {
+  id, subscriptionId, amount
+  currency (USDC), status
+  transactionHash, chainId
+  fromAddress, toAddress, blockNumber
+}
+```
+
+---
+
+## 🔒 Security Features
+
+### Authentication & Authorization
+- 🔐 JWT with refresh tokens
+- 🛡️ Password hashing (Argon2)
+- 🎯 Role-based access control (RBAC)
+- ✅ Permission checks at service layer
+
+### Web3 Security
+- ✅ Transaction verification on-chain
+- 🔍 Amount validation (±1% tolerance)
+- 📍 Receiver address verification
+- 🎯 Token contract validation
+- 🔢 Block confirmation checks
+
+### Data Protection
+- 🗄️ SQL injection prevention (TypeORM)
+- 🧹 Input sanitization (class-validator)
+- 🔒 Encrypted sensitive data
+- 📝 Audit logs for critical actions
+
+---
+
+## 📈 Roadmap
+
+### Q1 2025 - MVP Launch
+- [x] Core AI review features
+- [x] Team collaboration
+- [x] Subscription system
+- [x] Web3 payment
+- [ ] Beta program (100 users)
+- [ ] Public launch
+
+### Q2 2025 - Growth
+- [ ] Bitbucket support
+- [ ] Slack integration
+- [ ] Advanced analytics
+- [ ] Custom AI model fine-tuning
+- [ ] Multi-language support (VI, JP)
+
+### Q3 2025 - Enterprise
+- [ ] VS Code extension
+- [ ] IDE plugins (IntelliJ, WebStorm)
+- [ ] Security vulnerability detection
+- [ ] CI/CD pipeline integration
+- [ ] SLA guarantees
+
+### Q4 2025 - Scale
+- [ ] Mobile app
+- [ ] AI-powered code generation
+- [ ] Compliance checking (GDPR, SOC2)
+- [ ] White-label solutions
+- [ ] Marketplace partnerships
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👥 Team
+
+**AI Code Reviewer Team**
+- Product & Development
+- Based in Vietnam 🇻🇳
+- Building the future of code review
+
+---
+
+## 🙏 Acknowledgments
+
+- [OpenAI](https://openai.com/) - GPT-4 API
+- [Anthropic](https://anthropic.com/) - Claude API
+- [NestJS](https://nestjs.com/) - Backend framework
+- [Next.js](https://nextjs.org/) - Frontend framework
+- [Circle](https://www.circle.com/) - USDC stablecoin
+- [Alchemy](https://www.alchemy.com/) - Blockchain infrastructure
+
+---
+
+## 📞 Support
+
+- 📧 Email: support@aicodereview.dev
+- 💬 Discord: [Join our community](https://discord.gg/aicodereview)
+- 📚 Docs: [docs.aicodereview.dev](https://docs.aicodereview.dev)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/ai-code-reviewer/issues)
+
+---
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/ai-code-reviewer&type=Date)](https://star-history.com/#yourusername/ai-code-reviewer&Date)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by AI Code Reviewer Team**
+
+[Website](https://aicodereview.dev) • [Twitter](https://twitter.com/aicodereview) • [LinkedIn](https://linkedin.com/company/aicodereview)
+
+</div>
