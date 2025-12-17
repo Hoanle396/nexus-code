@@ -43,6 +43,10 @@ import {
   Settings,
   ArrowUpRight,
   Plane,
+  Eye,
+  Shield,
+  Loader2,
+  XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -85,6 +89,7 @@ export default function TeamDetailPage() {
   );
   const [inviteLoading, setInviteLoading] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [emailValid, setEmailValid] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -92,6 +97,11 @@ export default function TeamDetailPage() {
   useEffect(() => {
     fetchTeamData();
   }, [teamId]);
+
+  useEffect(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setEmailValid(emailRegex.test(inviteEmail));
+  }, [inviteEmail]);
 
   const fetchTeamData = async () => {
     try {
@@ -650,63 +660,217 @@ export default function TeamDetailPage() {
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent className="bg-zinc-900 border-zinc-800">
-          <DialogHeader>
-            <DialogTitle>Invite New Member</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              Send an email invitation to join this team
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-5 py-4">
-            <div className="space-y-2">
-              <Label className="text-zinc-200">Email Address</Label>
-              <Input
-                type="email"
-                placeholder="member@example.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 transition-all duration-300"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-zinc-200">Role</Label>
-              <Select
-                value={inviteRole}
-                onValueChange={(v) => setInviteRole(v as any)}
-              >
-                <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
-                  <SelectItem value="ADMIN">
-                    Admin – Full access & manage members
-                  </SelectItem>
-                  <SelectItem value="MEMBER">
-                    Member – Standard access
-                  </SelectItem>
-                  <SelectItem value="VIEWER">
-                    Viewer – Read-only access
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl">
+          {/* Header with gradient */}
+          <div className="relative mx-0 mt-0 px-6 py-6 rounded-t-lg bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-transparent border-b border-emerald-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center ring-2 ring-emerald-500/30">
+                <Mail className="h-6 w-6 text-emerald-400 animate-pulse" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-white">
+                  Invite Team Member
+                </DialogTitle>
+                <DialogDescription className="text-zinc-400 text-sm">
+                  Send an invitation to collaborate on this team
+                </DialogDescription>
+              </div>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleInviteMember}
-              disabled={inviteLoading || !inviteEmail}
-              className="flex-1 bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]"
-            >
-              {inviteLoading ? "Sending..." : "Send Invitation"}
-            </Button>
+
+          <div className="space-y-6 py-2 rounded-b-lg p-6">
+            {/* Email Input with Validation */}
+            <div className="space-y-2">
+              <Label className="text-zinc-200 font-medium">
+                Email Address
+              </Label>
+              <div className="relative">
+                <Input
+                  type="email"
+                  placeholder="colleague@company.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className={cn(
+                    "bg-zinc-800/50 border-zinc-700 h-12 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 transition-all duration-300 pr-10",
+                    inviteEmail &&
+                    (emailValid
+                      ? "border-emerald-500/50 focus:border-emerald-400"
+                      : "border-red-500/50 focus:border-red-400")
+                  )}
+                />
+                {inviteEmail && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {emailValid ? (
+                      <CheckCircle className="h-5 w-5 text-emerald-400" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-400" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {inviteEmail && !emailValid && (
+                <p className="text-xs text-red-400 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Please enter a valid email address
+                </p>
+              )}
+            </div>
+
+            {/* Role Selection Cards */}
+            <div className="space-y-3">
+              <Label className="text-zinc-200 font-medium">
+                Select Role & Permissions
+              </Label>
+              <div className="grid grid-cols-1 gap-3">
+                {/* Admin Role */}
+                <button
+                  type="button"
+                  onClick={() => setInviteRole("ADMIN")}
+                  className={cn(
+                    "relative p-2 rounded-xl border-2 text-left transition-all duration-300 group",
+                    inviteRole === "ADMIN"
+                      ? "border-emerald-400 bg-emerald-500/10 shadow-lg shadow-emerald-500/20"
+                      : "border-zinc-700 bg-zinc-800/30 hover:border-zinc-600 hover:bg-zinc-800/50"
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                        inviteRole === "ADMIN"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-zinc-700/50 text-zinc-400 group-hover:bg-zinc-600/50"
+                      )}
+                    >
+                      <Shield className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-white">Admin</h4>
+                        {inviteRole === "ADMIN" && (
+                          <CheckCircle className="h-5 w-5 text-emerald-400" />
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-400 mt-1">
+                        Full access to manage team, projects, and members
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Member Role */}
+                <button
+                  type="button"
+                  onClick={() => setInviteRole("MEMBER")}
+                  className={cn(
+                    "relative p-2 rounded-xl border-2 text-left transition-all duration-300 group",
+                    inviteRole === "MEMBER"
+                      ? "border-emerald-400 bg-emerald-500/10 shadow-lg shadow-emerald-500/20"
+                      : "border-zinc-700 bg-zinc-800/30 hover:border-zinc-600 hover:bg-zinc-800/50"
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                        inviteRole === "MEMBER"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-zinc-700/50 text-zinc-400 group-hover:bg-zinc-600/50"
+                      )}
+                    >
+                      <Users className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-white">Member</h4>
+                        {inviteRole === "MEMBER" && (
+                          <CheckCircle className="h-5 w-5 text-emerald-400" />
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-400 mt-1">
+                        Standard access to collaborate on team projects
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Viewer Role */}
+                <button
+                  type="button"
+                  onClick={() => setInviteRole("VIEWER")}
+                  className={cn(
+                    "relative p-2 rounded-xl border-2 text-left transition-all duration-300 group",
+                    inviteRole === "VIEWER"
+                      ? "border-emerald-400 bg-emerald-500/10 shadow-lg shadow-emerald-500/20"
+                      : "border-zinc-700 bg-zinc-800/30 hover:border-zinc-600 hover:bg-zinc-800/50"
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                        inviteRole === "VIEWER"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-zinc-700/50 text-zinc-400 group-hover:bg-zinc-600/50"
+                      )}
+                    >
+                      <Eye className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-white">Viewer</h4>
+                        {inviteRole === "VIEWER" && (
+                          <CheckCircle className="h-5 w-5 text-emerald-400" />
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-400 mt-1">
+                        Read-only access to view team projects
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <DialogFooter className="flex-row gap-3 sm:gap-3 pt-4 border-t border-zinc-800 px-6 py-4">
             <Button
               variant="outline"
-              onClick={() => setShowInviteDialog(false)}
-              className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              size="lg"
+              onClick={() => {
+                setShowInviteDialog(false);
+                setInviteEmail("");
+                setInviteRole("MEMBER");
+              }}
+              disabled={inviteLoading}
+              className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all duration-300"
             >
               Cancel
             </Button>
-          </div>
+            <Button
+              onClick={handleInviteMember}
+              size="lg"
+              disabled={inviteLoading || !inviteEmail || !emailValid}
+              className={cn(
+                "flex-1 bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold",
+                (!inviteLoading && inviteEmail && emailValid) &&
+                "hover:scale-[1.02]"
+              )}
+            >
+              {inviteLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending Invitation...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Send Invitation
+                </span>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
