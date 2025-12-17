@@ -138,7 +138,7 @@ export default function EditProjectPage() {
       <Card className="bg-zinc-900/50 backdrop-blur-sm border-emerald-400/20 shadow-2xl hover:border-emerald-400/40 transition-all duration-300">
         <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
           <div className="space-y-2">
-            <CardTitle className="text-xl sm:text-3xl font-bold text-white">
+            <CardTitle className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
               Edit Project
             </CardTitle>
             <CardDescription className="text-zinc-400 text-sm flex items-center gap-2 flex-wrap">

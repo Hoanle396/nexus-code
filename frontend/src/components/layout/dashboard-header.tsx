@@ -20,7 +20,7 @@ const DashboardHeader: FC<Props> = ({
           {icon}
         </div>
         <div className="space-y-1">
-          <h1 className="text-xl lg:text-2xl font-bold text-white">{title}</h1>
+          <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">{title}</h1>
           <p className="text-zinc-400 text-sm">{description}</p>
         </div>
       </div>

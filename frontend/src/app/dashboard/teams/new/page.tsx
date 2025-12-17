@@ -80,7 +80,7 @@ export default function NewTeamPage() {
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg ring-2 ring-zinc-700 flex-shrink-0">
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-300" />
               </div>
-              <CardTitle className="text-2xl sm:text-3xl font-bold text-white">
+              <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
                 Create New Team
               </CardTitle>
             </div>

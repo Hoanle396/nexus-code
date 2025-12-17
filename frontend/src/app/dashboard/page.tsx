@@ -131,7 +131,7 @@ export default function DashboardPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32">
           <div className="relative">
-            <div className="w-20 h-20 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+            <div className="w-20 h-20 border-4 border-zinc-800 border-t-emerald-400 rounded-full animate-spin" />
             <div
               className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-zinc-600 rounded-full animate-spin animation-delay-150"
               style={{ animationDirection: "reverse" }}

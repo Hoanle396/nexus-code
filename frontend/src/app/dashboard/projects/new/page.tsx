@@ -107,7 +107,7 @@ export default function NewProjectPage() {
         <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div className="flex-1 space-y-2">
-              <CardTitle className="text-xl sm:text-3xl font-bold text-white">
+              <CardTitle className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
                 Create New Project
               </CardTitle>
               <CardDescription className="text-zinc-400 text-sm flex items-center gap-2">

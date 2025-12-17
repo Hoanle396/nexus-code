@@ -463,7 +463,7 @@ export default function BillingPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-zinc-800 border-t-emerald-400 rounded-full animate-spin" />
         <p className="mt-6 text-zinc-500 text-lg">
           Loading billing information...
         </p>
