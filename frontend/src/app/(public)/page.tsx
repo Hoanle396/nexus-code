@@ -149,6 +149,7 @@ export default function LandingPage() {
                   src="intro.mp4"
                   autoPlay
                   loop
+                  playsInline
                   controls
                   className="w-full h-full object-cover"
                 />
