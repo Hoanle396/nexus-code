@@ -42,7 +42,7 @@ export class SubscriptionService {
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
     private web3PaymentService: Web3PaymentService,
-  ) {}
+  ) { }
 
   async create(userId: string, createSubscriptionDto: CreateSubscriptionDto) {
     // Check if user already has a subscription
@@ -59,7 +59,7 @@ export class SubscriptionService {
     }
 
     const planDetails = PLAN_PRICING[createSubscriptionDto.plan];
-    
+
     const now = new Date();
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
@@ -73,19 +73,19 @@ export class SubscriptionService {
       monthlyReviewLimit: planDetails.monthlyReviewLimit,
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
-      status: createSubscriptionDto.plan === SubscriptionPlan.FREE 
-        ? SubscriptionStatus.ACTIVE 
-        : SubscriptionStatus.TRIALING,
+      status: createSubscriptionDto.plan === SubscriptionPlan.FREE
+        ? SubscriptionStatus.ACTIVE
+        : SubscriptionStatus.PENDING_PAYMENT,
     });
 
     const savedSubscription = await this.subscriptionRepository.save(subscription);
 
-    // Update team entity if this is a team subscription
-    if (createSubscriptionDto.teamId) {
+    // Only update team entity if this is a FREE plan (paid plans update after payment)
+    if (createSubscriptionDto.teamId && createSubscriptionDto.plan === SubscriptionPlan.FREE) {
       const team = await this.subscriptionRepository.manager.findOne(Team, {
         where: { id: createSubscriptionDto.teamId },
       });
-      
+
       if (team) {
         team.plan = createSubscriptionDto.plan as any;
         team.maxProjects = planDetails.maxProjects;
@@ -157,7 +157,7 @@ export class SubscriptionService {
       });
 
       subscription = await this.subscriptionRepository.save(subscription);
-      
+
       // Load the team relation
       subscription = await this.subscriptionRepository.findOne({
         where: { id: subscription.id },
@@ -182,18 +182,18 @@ export class SubscriptionService {
       const planDetails = PLAN_PRICING[updateSubscriptionDto.plan];
       subscription.plan = updateSubscriptionDto.plan;
       subscription.price = planDetails.price;
-      subscription.maxProjects = planDetails.maxProjects;
-      subscription.maxMembers = planDetails.maxMembers;
-      subscription.monthlyReviewLimit = planDetails.monthlyReviewLimit;
-      
-      // Auto-activate for paid plans (demo mode - remove payment requirement)
-      if (updateSubscriptionDto.plan !== SubscriptionPlan.FREE) {
+
+      // For FREE plan, activate immediately and update limits
+      if (updateSubscriptionDto.plan === SubscriptionPlan.FREE) {
         subscription.status = SubscriptionStatus.ACTIVE;
-        
+        subscription.maxProjects = planDetails.maxProjects;
+        subscription.maxMembers = planDetails.maxMembers;
+        subscription.monthlyReviewLimit = planDetails.monthlyReviewLimit;
+
         // Update period dates
         const now = new Date();
         subscription.currentPeriodStart = now;
-        
+
         const periodEnd = new Date(now);
         if (subscription.billingCycle === 'yearly') {
           periodEnd.setFullYear(periodEnd.getFullYear() + 1);
@@ -201,25 +201,28 @@ export class SubscriptionService {
           periodEnd.setMonth(periodEnd.getMonth() + 1);
         }
         subscription.currentPeriodEnd = periodEnd;
-      }
 
-      // Also update the team's plan and limits if this is a team subscription
-      if (subscription.teamId) {
-        // Fetch team if not loaded
-        let team = subscription.team;
-        if (!team) {
-          team = await this.subscriptionRepository.manager.findOne(Team, {
-            where: { id: subscription.teamId },
-          });
+        // Update team entity for FREE plan
+        if (subscription.teamId) {
+          let team = subscription.team;
+          if (!team) {
+            team = await this.subscriptionRepository.manager.findOne(Team, {
+              where: { id: subscription.teamId },
+            });
+          }
+
+          if (team) {
+            team.plan = subscription.plan as any;
+            team.maxProjects = planDetails.maxProjects;
+            team.maxMembers = planDetails.maxMembers;
+            team.monthlyReviewLimit = planDetails.monthlyReviewLimit;
+            await this.subscriptionRepository.manager.save(Team, team);
+          }
         }
-        
-        if (team) {
-          team.plan = subscription.plan as any;
-          team.maxProjects = planDetails.maxProjects;
-          team.maxMembers = planDetails.maxMembers;
-          team.monthlyReviewLimit = planDetails.monthlyReviewLimit;
-          await this.subscriptionRepository.manager.save(Team, team);
-        }
+      } else {
+        // For paid plans, set to PENDING_PAYMENT until payment is verified
+        // Do NOT update limits or team - this happens in verifyPaymentTransaction()
+        subscription.status = SubscriptionStatus.PENDING_PAYMENT;
       }
     }
 
@@ -318,11 +321,11 @@ export class SubscriptionService {
     }
 
     subscription.currentMonthReviews = 0;
-    
+
     const now = new Date();
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
-    
+
     subscription.currentPeriodStart = now;
     subscription.currentPeriodEnd = periodEnd;
 
@@ -484,19 +487,19 @@ export class SubscriptionService {
       if (subscription) {
         // Get plan details to update limits
         const planDetails = PLAN_PRICING[subscription.plan];
-        
+
         subscription.status = SubscriptionStatus.ACTIVE;
         subscription.walletAddress = verification.from;
-        
+
         // Update plan limits based on the current plan
         subscription.maxProjects = planDetails.maxProjects;
         subscription.maxMembers = planDetails.maxMembers;
         subscription.monthlyReviewLimit = planDetails.monthlyReviewLimit;
-        
+
         // Update period dates
         const now = new Date();
         subscription.currentPeriodStart = now;
-        
+
         const periodEnd = new Date(now);
         if (subscription.billingCycle === 'yearly') {
           periodEnd.setFullYear(periodEnd.getFullYear() + 1);
@@ -516,7 +519,7 @@ export class SubscriptionService {
               where: { id: subscription.teamId },
             });
           }
-          
+
           if (team) {
             team.plan = subscription.plan as any;
             team.maxProjects = planDetails.maxProjects;

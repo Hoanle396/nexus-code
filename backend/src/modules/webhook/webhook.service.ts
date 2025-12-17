@@ -176,8 +176,8 @@ export class WebhookService {
           author: prData.author,
           branch: prData.branch,
           filesChanged: prData.filesChanged?.length || 0,
-          additions: prData.filesChanged?.reduce((sum, f) => sum + (f.additions || 0), 0) || 0,
-          deletions: prData.filesChanged?.reduce((sum, f) => sum + (f.deletions || 0), 0) || 0,
+          additions: prData.filesChanged || 0,
+          deletions: prData.filesChanged || 0,
         }, botToken, project.discordChannelId);
       }
 
@@ -337,7 +337,7 @@ export class WebhookService {
       // Determine the comment type and reply accordingly
       const isReviewComment = commentData.filePath && commentData.lineNumber;
       const isThreadedComment = !!commentData.parentCommentId; // Has in_reply_to_id from webhook
-      
+
       if (isReviewComment || isThreadedComment) {
         // This is either:
         // 1. A review comment (inline on code), OR
@@ -349,7 +349,7 @@ export class WebhookService {
         if (source === 'gitlab') {
           this.logger.log(`Discussion ID: ${(commentData as any).discussionId || 'none'}`);
         }
-        
+
         await this.postReplyToComment(
           project,
           commentData.pullRequestNumber.toString(),
@@ -739,7 +739,7 @@ export class WebhookService {
         reviewId,
         ReviewStatus.FAILED,
       );
-      
+
 
       // Send Discord notification for review failure
       const botToken = project.discordBotToken;
@@ -1065,7 +1065,7 @@ export class WebhookService {
         // GitLab: Use addNote to reply in an existing discussion
         if (discussionId) {
           this.logger.log(`   Adding note to discussion ${discussionId}`);
-          
+
           const response = await api.MergeRequestDiscussions.addNote(
             projectId,
             parseInt(pullRequestId), // MR IID
@@ -1078,7 +1078,7 @@ export class WebhookService {
         } else {
           // Create new discussion if no discussionId (shouldn't happen, but as fallback)
           this.logger.log(`   No discussion ID, creating new note on MR`);
-          
+
           const response = await api.MergeRequestNotes.create(
             projectId,
             parseInt(pullRequestId),
@@ -1124,7 +1124,7 @@ export class WebhookService {
         // For issue comments on PRs, GitHub doesn't have threaded replies
         // Add @mention for context
         const replyWithMention = `@${authorUsername}\n\n${reply}`;
-        
+
         await octokit.issues.createComment({
           owner,
           repo,
