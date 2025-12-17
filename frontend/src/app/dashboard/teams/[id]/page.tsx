@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useAuthStore } from "@/store/auth";
 import {
   Card,
   CardContent,
@@ -64,8 +65,8 @@ interface Team {
 
 interface TeamMember {
   id: string;
-  role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
-  status: "PENDING" | "ACCEPTED" | "DECLINED";
+  role: "owner" | "admin" | "member" | "viewer";
+  status: "pending" | "accepted" | "declined";
   invitationToken?: string;
   user: {
     id: string;
@@ -79,6 +80,7 @@ export default function TeamDetailPage() {
   const params = useParams();
   const router = useRouter();
   const teamId = params.id as string;
+  const { user } = useAuthStore();
 
   const [team, setTeam] = useState<Team | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -102,6 +104,20 @@ export default function TeamDetailPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     setEmailValid(emailRegex.test(inviteEmail));
   }, [inviteEmail]);
+
+  // Get current user's role in this team
+  const currentUserRole = useMemo(() => {
+    if (!user || !members.length) return null;
+    const currentUserMembership = members.find(
+      (member) => member.user.id === user.id || member.user.email === user.email
+    );
+    return currentUserMembership?.role || null;
+  }, [user, members]);
+
+  // Check if current user can manage members (OWNER or ADMIN)
+  const canManageMembers = useMemo(() => {
+    return currentUserRole === "owner" || currentUserRole === "admin";
+  }, [currentUserRole]);
 
   const fetchTeamData = async () => {
     try {
@@ -186,7 +202,7 @@ export default function TeamDetailPage() {
 
   const handleUpdateRole = async (
     memberId: string,
-    newRole: "ADMIN" | "MEMBER" | "VIEWER"
+    newRole: "admin" | "member" | "viewer"
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -268,13 +284,13 @@ export default function TeamDetailPage() {
 
   const getRoleVariant = (role: string) => {
     switch (role) {
-      case "OWNER":
+      case "owner":
         return "destructive";
-      case "ADMIN":
+      case "admin":
         return "default";
-      case "MEMBER":
+      case "member":
         return "success";
-      case "VIEWER":
+      case "viewer":
         return "secondary";
       default:
         return "secondary";
@@ -440,13 +456,15 @@ export default function TeamDetailPage() {
                     Invite and manage team access
                   </CardDescription>
                 </div>
-                <Button
-                  onClick={() => setShowInviteDialog(true)}
-                  className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]"
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Invite Member
-                </Button>
+                {canManageMembers && (
+                  <Button
+                    onClick={() => setShowInviteDialog(true)}
+                    className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]"
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Invite Member
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -470,7 +488,7 @@ export default function TeamDetailPage() {
                               }`.trim()
                             : member.user.email}
                         </p>
-                        {member.role === "OWNER" && (
+                        {member.role === "owner" && (
                           <Crown className="h-5 w-5 text-yellow-500" />
                         )}
                       </div>
@@ -482,13 +500,13 @@ export default function TeamDetailPage() {
                           variant={getRoleVariant(member.role)}
                           className={cn(
                             "capitalize",
-                            member.role === "OWNER" &&
+                            member.role === "owner" &&
                             "bg-orange-500/20 text-orange-400 border-orange-500/50"
                           )}
                         >
                           {member.role.toLowerCase()}
                         </Badge>
-                        {member.status === "PENDING" && (
+                        {member.status === "pending" && (
                           <Badge
                             variant="secondary"
                             className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
@@ -501,14 +519,14 @@ export default function TeamDetailPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {member.status === "PENDING" && member.invitationToken && (
+                    {member.status === "pending" && member.invitationToken && (
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() =>
                           copyInvitationLink(member.invitationToken!)
                         }
-                        className="border-zinc-600 hover:bg-zinc-700"
+                        className="border-zinc-600 text-white hover:bg-zinc-700"
                       >
                         {copiedToken === member.invitationToken ? (
                           <CheckCircle className="h-4 w-4 mr-1 text-green-400" />
@@ -521,8 +539,9 @@ export default function TeamDetailPage() {
                       </Button>
                     )}
 
-                    {member.role !== "OWNER" &&
-                      member.status === "ACCEPTED" && (
+                    {canManageMembers &&
+                      member.role !== "owner" &&
+                      member.status === "accepted" && (
                         <>
                           <Select
                             value={member.role}
@@ -534,9 +553,9 @@ export default function TeamDetailPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-900 border-zinc-700">
-                              <SelectItem value="ADMIN">Admin</SelectItem>
-                              <SelectItem value="MEMBER">Member</SelectItem>
-                              <SelectItem value="VIEWER">Viewer</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="member">Member</SelectItem>
+                              <SelectItem value="viewer">Viewer</SelectItem>
                             </SelectContent>
                           </Select>
 
