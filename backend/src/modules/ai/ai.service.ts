@@ -232,7 +232,7 @@ ${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDes
    - The severity level: error, warning, info, or suggestion
    - Description of the issue
    - The problematic code snippet (codeError) - copy from the mapping
-   - Suggested fix or improvement (codeSuggest)
+   - **ACTUAL WORKING CODE FIX in codeSuggest** - NOT a description, but the EXACT code that should replace the problematic code
    - Complete comment body with emoji prefix
 
 **CRITICAL REMINDER:**
@@ -273,10 +273,27 @@ And you find an issue on line 43, your response should be:
       "issue": "Potential null pointer - user.data might be undefined",
       "codeError": "return user.data;",
       "codeSuggest": "return user?.data ?? null;",
-      "body": "🐛 Error: Potential null pointer - user.data might be undefined. Consider using optional chaining."
+      "body": "🐛 Error: Potential null pointer - user.data might be undefined. Suggested fix: return user?.data ?? null;"
     }
   ]
 }
+
+**CRITICAL: codeSuggest must contain ACTUAL WORKING CODE, not descriptions like 'use optional chaining' or 'add error handling'. Write the EXACT code that fixes the issue.**
+
+**CODE SUGGESTION REQUIREMENTS (CRITICAL):**
+- **codeSuggest MUST contain ACTUAL WORKING CODE** - the exact code that should replace codeError
+- DO NOT write descriptions like "add error handling" or "use try-catch"
+- DO write the actual code: "try { ... } catch (error) { ... }"
+- Include proper syntax, variable names, and indentation
+- The code should be ready to copy-paste and use
+- Examples of GOOD codeSuggest:
+  ✓ "const user = await userService.findById(id).catch(() => null);"
+  ✓ "if (!user) return null;\nreturn user.data;"
+  ✓ "return user?.data ?? defaultValue;"
+- Examples of BAD codeSuggest:
+  ✗ "add null checking"
+  ✗ "use optional chaining here"
+  ✗ "handle the error properly"
 
 **Severity Levels:**
 - error: Critical bugs, security vulnerabilities, logic errors
@@ -290,8 +307,9 @@ And you find an issue on line 43, your response should be:
 - **ONLY comment on ADDED lines (lines with + prefix, RIGHT side)**
 - side must always be "RIGHT"
 - If code is good, return empty lineComments array
-- Provide specific codeError and codeSuggest when applicable
+- **ALWAYS provide specific codeError and WORKING CODE in codeSuggest**
 - Use appropriate emoji: 🐛 error, ⚠️ warning, 📝 info, 💡 suggestion, 🔒 security, ✨ best practices
+- Include the code fix in the body field formatted with markdown code blocks
 `;
 
     const response = await this.callAiApiForStructuredReview(
@@ -488,12 +506,15 @@ Learn from these examples to provide better reviews for this project.
 3. Check OLD code (lines with -) in the LEFT side when relevant
 4. Comment directly on specific lines where issues are found
 5. Provide severity levels: error, warning, info, suggestion
-6. Be concise but thorough in explanations
+6. **ALWAYS include ACTUAL WORKING CODE in codeSuggest** - not descriptions
+7. Be concise but thorough in explanations
 
 **Comment quality standards:**
 - ONLY comment on real issues - no generic observations
 - Be specific about the problem and solution
-- Include code examples when helpful
+- **ALWAYS provide ACTUAL WORKING CODE in codeSuggest field** - NOT descriptions like "add error handling"
+- codeSuggest must be ready-to-use code that fixes the issue
+- Include code fix in the comment body using markdown code blocks
 - Consider the broader context of the change
 - Use appropriate emojis: 🐛 bugs, ⚠️ warnings, 💡 suggestions, 🔒 security, 📝 business, ✨ best practices
 
@@ -669,8 +690,8 @@ Good Comment: ${example.aiComment}
                       severity: { type: 'string', enum: ['error', 'warning', 'info', 'suggestion'], description: 'Issue severity level' },
                       issue: { type: 'string', description: 'Description of the issue found' },
                       codeError: { type: 'string', description: 'The problematic code snippet' },
-                      codeSuggest: { type: 'string', description: 'Suggested code fix or improvement' },
-                      body: { type: 'string', description: 'Full comment body with emoji prefix' }
+                      codeSuggest: { type: 'string', description: 'ACTUAL WORKING CODE that fixes the issue - NOT a description. Must be ready-to-use code with proper syntax.' },
+                      body: { type: 'string', description: 'Full comment body with emoji prefix and code fix formatted in markdown code blocks' }
                     },
                     required: ['line', 'side', 'severity', 'issue', 'body'],
                     additionalProperties: false
